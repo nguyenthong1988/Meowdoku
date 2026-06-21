@@ -1,0 +1,128 @@
+using System.IO;
+using Cast.Game.UI;
+using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
+using UnityEngine;
+using UnityEngine.UI;
+
+public static class ViewGameplayPrefabCreator
+{
+    private const string PrefabPath = "Assets/_Game/Prefabs/UI/Views/ViewGamePlay.prefab";
+    private const string AddressableKey = "ViewGameplay";
+    private const string AddressableGroup = "Default Local Group";
+
+    [MenuItem("Tools/Setup Addressables/Create ViewGameplay Prefab")]
+    public static void CreateViewGameplayPrefab()
+    {
+        string dir = Path.GetDirectoryName(PrefabPath);
+        if (!Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+
+        var root = new GameObject("ViewGameplay");
+        root.AddComponent<RectTransform>();
+
+        // Level label
+        var labelGo = CreateUIObject("LevelLabel", root.transform);
+        SetAnchors(labelGo.GetComponent<RectTransform>(), new Vector2(0.1f, 0.88f), new Vector2(0.9f, 1f));
+        var levelLabel = labelGo.AddComponent<Text>();
+        levelLabel.text = "Level 1";
+        levelLabel.alignment = TextAnchor.MiddleCenter;
+        levelLabel.fontSize = 36;
+
+        // Hearts root
+        var heartsGo = CreateUIObject("HeartsRoot", root.transform);
+        SetAnchors(heartsGo.GetComponent<RectTransform>(), new Vector2(0f, 0.78f), new Vector2(0.6f, 0.88f));
+
+        // Action buttons
+        var actionParent = CreateUIObject("ActionButtons", root.transform);
+        SetAnchors(actionParent.GetComponent<RectTransform>(), new Vector2(0f, 0f), new Vector2(1f, 0.12f));
+        var hintButton    = CreateButton(actionParent.transform, "HintButton",    "Hint");
+        var undoButton    = CreateButton(actionParent.transform, "UndoButton",    "Undo");
+        var restartButton = CreateButton(actionParent.transform, "RestartButton", "Restart");
+
+        // Booster buttons
+        var boosterParent = CreateUIObject("BoosterButtons", root.transform);
+        SetAnchors(boosterParent.GetComponent<RectTransform>(), new Vector2(0f, 0.12f), new Vector2(1f, 0.24f));
+        var boosterHint      = CreateButton(boosterParent.transform, "BoosterHint",       "Hint");
+        var boosterReveal    = CreateButton(boosterParent.transform, "BoosterRevealCell",  "Reveal");
+        var boosterAddHeart  = CreateButton(boosterParent.transform, "BoosterAddHeart",   "+Heart");
+
+        // Attach ViewGameplay and wire serialized fields
+        var view = root.AddComponent<ViewGameplay>();
+        var so = new SerializedObject(view);
+        so.FindProperty("_levelLabel").objectReferenceValue      = levelLabel;
+        so.FindProperty("_heartsRoot").objectReferenceValue      = heartsGo.transform;
+        so.FindProperty("_hintButton").objectReferenceValue      = hintButton;
+        so.FindProperty("_undoButton").objectReferenceValue      = undoButton;
+        so.FindProperty("_restartButton").objectReferenceValue   = restartButton;
+        so.FindProperty("_boosterHint").objectReferenceValue     = boosterHint;
+        so.FindProperty("_boosterRevealCell").objectReferenceValue = boosterReveal;
+        so.FindProperty("_boosterAddHeart").objectReferenceValue = boosterAddHeart;
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath, out bool success);
+        Object.DestroyImmediate(root);
+
+        if (!success || prefab == null)
+        {
+            Debug.LogError($"[ViewGameplayCreator] Failed to save prefab at {PrefabPath}");
+            return;
+        }
+
+        AssetDatabase.Refresh();
+
+        var settings = AddressableAssetSettingsDefaultObject.Settings;
+        if (settings == null)
+        {
+            Debug.LogWarning("[ViewGameplayCreator] Prefab saved but Addressables not configured — mark it manually.");
+            return;
+        }
+
+        var group = settings.FindGroup(AddressableGroup) ?? settings.DefaultGroup;
+        string guid = AssetDatabase.AssetPathToGUID(PrefabPath);
+        var entry = settings.CreateOrMoveEntry(guid, group, readOnly: false, postEvent: false);
+        entry.address = AddressableKey;
+
+        settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, null, true);
+        AssetDatabase.SaveAssets();
+
+        Debug.Log($"[ViewGameplayCreator] Prefab saved at '{PrefabPath}', Addressable key = '{AddressableKey}'.");
+    }
+
+    private static Button CreateButton(Transform parent, string name, string label)
+    {
+        var go = CreateUIObject(name, parent);
+        var img = go.AddComponent<Image>();
+        var btn = go.AddComponent<Button>();
+        btn.targetGraphic = img;
+
+        var textGo = CreateUIObject("Text", go.transform);
+        var textRect = textGo.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.sizeDelta = Vector2.zero;
+        var text = textGo.AddComponent<Text>();
+        text.text = label;
+        text.alignment = TextAnchor.MiddleCenter;
+        text.fontSize = 24;
+
+        return btn;
+    }
+
+    private static GameObject CreateUIObject(string name, Transform parent)
+    {
+        var go = new GameObject(name);
+        go.AddComponent<RectTransform>();
+        go.transform.SetParent(parent, false);
+        return go;
+    }
+
+    private static void SetAnchors(RectTransform rt, Vector2 min, Vector2 max)
+    {
+        rt.anchorMin = min;
+        rt.anchorMax = max;
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = Vector2.zero;
+    }
+}
