@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using CaskFramework.Profile;
 using CaskFramework.UI;
@@ -15,9 +14,10 @@ namespace Cast.Game.Flow
 
     public sealed class GameFlow
     {
+        private const string ViewHomeName = "ViewHome";
         private const string ViewGameplayName = "ViewGameplay";
-        private const string PopupCompleteName = "PopupLevelComplete";
-        private const string PopupGameOverName = "PopupGameOver";
+        private const string PopupWinName = "PopupWin";
+        private const string PopupLoseName = "PopupLose";
 
         private readonly ILevelDataReader _reader;
         private readonly IGameSession _session;
@@ -44,7 +44,58 @@ namespace Cast.Game.Flow
             _profile = profile;
         }
 
-        public async UniTask StartLevelAsync()
+        public async UniTask RunAsync()
+        {
+            _board.SetVisible(false);
+            bool skipHome = _profile.ProgressLevel <= 1;
+            while (true)
+            {
+                if (!skipHome)
+                    await ShowHomeUntilPlayAsync();
+                skipHome = false;
+
+                await PlayLevelsAsync();
+            }
+        }
+
+        private async UniTask ShowHomeUntilPlayAsync()
+        {
+            ViewHome home = null;
+            await _ui.PushViewAsync<ViewHome>(
+                ViewHomeName,
+                stack: false,
+                onLoad: (_, v) => home = v);
+
+            if (home == null) return;
+
+            while (await home.WaitForChoiceAsync(_profile) != HomeChoice.Play) { }
+        }
+
+        private async UniTask PlayLevelsAsync()
+        {
+            while (true)
+            {
+                GameResult? played = await PlayCurrentLevelAsync();
+                if (played == null) return;
+                GameResult result = played.Value;
+
+                _board.SetVisible(false);
+
+                if (result.Won)
+                {
+                    WinChoice choice = await ShowWinAsync(result);
+                    if (choice == WinChoice.Home) return;
+                    if (choice == WinChoice.Next) _profile.Advance();
+                }
+                else
+                {
+                    LoseChoice choice = await ShowLoseAsync(result);
+                    if (choice == LoseChoice.Home) return;
+                }
+            }
+        }
+
+        private async UniTask<GameResult?> PlayCurrentLevelAsync()
         {
             _cts?.Cancel();
             _cts = new CancellationTokenSource();
@@ -54,55 +105,48 @@ namespace Cast.Game.Flow
             if (!read.Success)
             {
                 Debug.LogError($"[GameFlow] Failed to load level {_profile.ProgressLevel}:\n{read.Validation?.Summary()}");
-                return;
+                return null;
             }
 
             _session.Setup(read.Level);
             await _board.BuildAsync(read.Level);
-            _board.BindRendering(_session);   
-            _interaction.Bind(_session);      
+            _board.BindRendering(_session);
+            _interaction.Bind(_session);
 
             await _ui.PushViewAsync<ViewGameplay>(
                 ViewGameplayName,
                 stack: false,
                 onLoad: (_, view) => view.Bind(_session, _boosters));
 
+            await UniTask.WaitUntil(() => _ui.GetActiveTopView() == null);
+
+            _board.SetVisible(true);
             await _board.PlayRevealAsync(ct);
 
             _session.Begin();
-            GameResult result = await _session.PlayToEndAsync(ct);
-
-            ResultChoice choice = await ShowResultAsync(result);
-            if (choice == ResultChoice.Next) await NextLevelAsync();
-            else if (choice == ResultChoice.Retry) await RetryAsync();
+            return await _session.PlayToEndAsync(ct);
         }
 
-        public UniTask NextLevelAsync()
+        private async UniTask<WinChoice> ShowWinAsync(GameResult result)
         {
-            _profile.Advance(); 
-            return StartLevelAsync();
+            PopupWin popup = null;
+            await _ui.PushPopupAsync<PopupWin>(
+                PopupWinName,
+                onLoad: (_, p) => popup = p);
+            WinChoice choice = popup != null ? await popup.WaitForChoiceAsync(result) : WinChoice.Home;
+            await _ui.PopPopupAsync();
+            return choice;
         }
 
-        public UniTask RetryAsync() => StartLevelAsync(); 
-
-        private async UniTask<ResultChoice> ShowResultAsync(GameResult result)
+        private async UniTask<LoseChoice> ShowLoseAsync(GameResult result)
         {
-            if (result.Won)
-            {
-                PopupLevelComplete popup = null;
-                await _ui.PushPopupAsync<PopupLevelComplete>(
-                    PopupCompleteName,
-                    onLoad: (_, p) => popup = p);
-                return popup != null ? await popup.WaitForChoiceAsync(result) : ResultChoice.Quit;
-            }
-            else
-            {
-                PopupGameOver popup = null;
-                await _ui.PushPopupAsync<PopupGameOver>(
-                    PopupGameOverName,
-                    onLoad: (_, p) => popup = p);
-                return popup != null ? await popup.WaitForChoiceAsync(result) : ResultChoice.Quit;
-            }
+            PopupLose popup = null;
+            await _ui.PushPopupAsync<PopupLose>(
+                PopupLoseName,
+                onLoad: (_, p) => popup = p);
+            LoseChoice choice = popup != null ? await popup.WaitForChoiceAsync(result) : LoseChoice.Home;
+            await _ui.PopPopupAsync();
+            return choice;
         }
     }
 }

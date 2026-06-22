@@ -12,7 +12,8 @@ namespace Cast.Game.UI
     {
         [Header("Hearts / labels")]
         [SerializeField] private Text _levelLabel;
-        [SerializeField] private Transform _heartsRoot;
+        [SerializeField] private HeartBar _heartBar;
+        [SerializeField] private CatCounter _catCounter;
 
         [Header("Action buttons")]
         [SerializeField] private Button _hintButton;
@@ -32,8 +33,10 @@ namespace Cast.Game.UI
             _session = session;
             _boosters = boosters;
 
-            _session.HeartsChanged += OnHeartsChanged;
             _session.PhaseChanged += OnPhaseChanged;
+
+            if (_heartBar != null) _heartBar.Bind(_session);
+            if (_catCounter != null) _catCounter.Bind(_session);
 
             if (_hintButton != null) _hintButton.onClick.AddListener(() => _session.Hint());
             if (_undoButton != null) _undoButton.onClick.AddListener(() => _session.Undo());
@@ -43,26 +46,18 @@ namespace Cast.Game.UI
             if (_boosterRevealCell != null) _boosterRevealCell.onClick.AddListener(() => UseBooster(BoosterType.RevealCell));
             if (_boosterAddHeart != null) _boosterAddHeart.onClick.AddListener(() => UseBooster(BoosterType.AddHeart));
 
-            RefreshHearts();
             RefreshLevelLabel();
         }
 
         private void UseBooster(BoosterType type)
         {
-            
+
             _boosters?.UseAsync(type).Forget();
         }
 
-        private void OnHeartsChanged(int hearts) => RefreshHearts();
-
         private void OnPhaseChanged(GamePhase phase)
         {
-            
-        }
 
-        private void RefreshHearts()
-        {
-            
         }
 
         private void RefreshLevelLabel()
@@ -75,7 +70,6 @@ namespace Cast.Game.UI
         {
             if (_session != null)
             {
-                _session.HeartsChanged -= OnHeartsChanged;
                 _session.PhaseChanged -= OnPhaseChanged;
             }
         }

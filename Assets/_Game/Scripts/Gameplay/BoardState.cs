@@ -10,7 +10,7 @@ namespace Cast.Game.Gameplay
         public LevelData Level { get; }
         public int Size { get; }
 
-        public int CatsPlaced { get; private set; }
+        public int CatsRevealed { get; private set; }
 
         public BoardState(LevelData level)
         {
@@ -26,8 +26,8 @@ namespace Cast.Game.Gameplay
             PlayerMark prev = _marks[row, col];
             if (prev == mark) return;
 
-            if (prev == PlayerMark.Cat) CatsPlaced--;
-            if (mark == PlayerMark.Cat) CatsPlaced++;
+            if (prev == PlayerMark.Cat) CatsRevealed--;
+            if (mark == PlayerMark.Cat) CatsRevealed++;
             _marks[row, col] = mark;
         }
 
@@ -37,7 +37,7 @@ namespace Cast.Game.Gameplay
         public bool IsSolved()
         {
             
-            if (CatsPlaced != Level.Solution.Count) return false;
+            if (CatsRevealed != Level.Solution.Count) return false;
             for (int i = 0; i < Level.Solution.Count; i++)
             {
                 CatPlacement c = Level.Solution[i];
@@ -51,7 +51,7 @@ namespace Cast.Game.Gameplay
             for (int r = 0; r < Size; r++)
                 for (int c = 0; c < Size; c++)
                     _marks[r, c] = PlayerMark.None;
-            CatsPlaced = 0;
+            CatsRevealed = 0;
         }
     }
 }

@@ -15,17 +15,21 @@ namespace Cast.Game.Board
             _config = config ?? new BoardRevealConfig();
         }
 
+        public void Prepare(IReadOnlyList<CellView> cells)
+        {
+            if (cells == null || cells.Count == 0) return;
+            foreach (CellView cell in cells)
+            {
+                Vector3 offset = (Vector3)(Random.insideUnitCircle * _config.ScatterRadius);
+                cell.SetHidden(offset, _config.StartScale);
+            }
+        }
+
         public async UniTask PlayAsync(IReadOnlyList<CellView> cells, BoardLayout layout, CancellationToken ct = default)
         {
             if (cells == null || cells.Count == 0) return;
 
             IReadOnlyList<CellView> ordered = Order(cells);
-
-            foreach (CellView cell in ordered)
-            {
-                Vector3 offset = (Vector3)(Random.insideUnitCircle * _config.ScatterRadius);
-                cell.SetHidden(offset, _config.StartScale);
-            }
 
             float maxEnd = 0f;
             for (int i = 0; i < ordered.Count; i++)

@@ -14,6 +14,9 @@ namespace Cast.Game.Board
         private IGameSession _session;
         private UniTaskCompletionSource<(bool, int, int)> _targetSource;
 
+        private bool _paintModeSet;
+        private bool _paintHint;
+
         public BoardInputMode Mode { get; private set; } = BoardInputMode.Locked;
 
         public BoardInputHandler(BoardInputReader reader, BoardView board)
@@ -81,12 +84,34 @@ namespace Cast.Game.Board
                     if (_session == null) return;
                     switch (g.Gesture)
                     {
-                        case PointerGesture.DoubleTap: _session.PlaceCat(g.Row, g.Col); break;
-                        case PointerGesture.Tap: _session.RemoveCat(g.Row, g.Col); break;
-                        case PointerGesture.LongPress: _session.ToggleMark(g.Row, g.Col); break;
+                        case PointerGesture.DoubleTap: _session.Reveal(g.Row, g.Col); break;
+                        case PointerGesture.Tap: _session.ToggleHint(g.Row, g.Col); break;
+                        case PointerGesture.DragStart: _paintModeSet = false; PaintDrag(g.Row, g.Col); break;
+                        case PointerGesture.DragMove: PaintDrag(g.Row, g.Col); break;
+                        case PointerGesture.DragEnd: _paintModeSet = false; break;
                     }
                     return;
             }
+        }
+
+        // Drag-paint: the first paintable cell decides the direction.
+        // Starting on a normal cell paints hints (None -> Hint); starting on a hint
+        // cell erases hints (Hint -> None). Revealed cells (Cat/Wrong) are skipped, so a
+        // drag begun on one adopts its direction from the first paintable cell it reaches.
+        private void PaintDrag(int row, int col)
+        {
+            if (_session == null) return;
+
+            PlayerMark mark = _session.Board.GetMark(row, col);
+            if (mark == PlayerMark.Cat || mark == PlayerMark.Wrong) return;
+
+            if (!_paintModeSet)
+            {
+                _paintModeSet = true;
+                _paintHint = mark == PlayerMark.None;
+            }
+
+            _session.SetHint(row, col, _paintHint);
         }
     }
 }

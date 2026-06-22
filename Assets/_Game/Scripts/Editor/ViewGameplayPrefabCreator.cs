@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using Cast.Game.UI;
 using UnityEditor;
@@ -11,6 +12,7 @@ public static class ViewGameplayPrefabCreator
     private const string PrefabPath = "Assets/_Game/Prefabs/UI/Views/ViewGamePlay.prefab";
     private const string AddressableKey = "ViewGameplay";
     private const string AddressableGroup = "Default Local Group";
+    private const int DefaultHearts = 5;
 
     [MenuItem("Tools/Setup Addressables/Create ViewGameplay Prefab")]
     public static void CreateViewGameplayPrefab()
@@ -30,9 +32,45 @@ public static class ViewGameplayPrefabCreator
         levelLabel.alignment = TextAnchor.MiddleCenter;
         levelLabel.fontSize = 36;
 
-        // Hearts root
-        var heartsGo = CreateUIObject("HeartsRoot", root.transform);
-        SetAnchors(heartsGo.GetComponent<RectTransform>(), new Vector2(0f, 0.78f), new Vector2(0.6f, 0.88f));
+        // Heart bar
+        var heartBarGo = CreateUIObject("HeartBar", root.transform);
+        SetAnchors(heartBarGo.GetComponent<RectTransform>(), new Vector2(0f, 0.78f), new Vector2(0.55f, 0.88f));
+        var heartLayout = heartBarGo.AddComponent<HorizontalLayoutGroup>();
+        heartLayout.childControlWidth = false;
+        heartLayout.childControlHeight = false;
+        heartLayout.childForceExpandWidth = false;
+        heartLayout.spacing = 8f;
+        var heartBar = heartBarGo.AddComponent<HeartBar>();
+
+        var hearts = new List<HeartIcon>();
+        HeartIcon heartTemplate = null;
+        for (int i = 0; i < DefaultHearts; i++)
+        {
+            var icon = CreateHeartIcon(heartBarGo.transform, $"Heart{i}");
+            hearts.Add(icon);
+            if (heartTemplate == null) heartTemplate = icon;
+        }
+
+        var heartBarSo = new SerializedObject(heartBar);
+        heartBarSo.FindProperty("_heartPrefab").objectReferenceValue = heartTemplate;
+        heartBarSo.FindProperty("_container").objectReferenceValue = heartBarGo.transform;
+        var heartsProp = heartBarSo.FindProperty("_hearts");
+        heartsProp.arraySize = hearts.Count;
+        for (int i = 0; i < hearts.Count; i++)
+            heartsProp.GetArrayElementAtIndex(i).objectReferenceValue = hearts[i];
+        heartBarSo.ApplyModifiedPropertiesWithoutUndo();
+
+        // Cat counter
+        var catGo = CreateUIObject("CatCounter", root.transform);
+        SetAnchors(catGo.GetComponent<RectTransform>(), new Vector2(0.6f, 0.78f), new Vector2(0.95f, 0.88f));
+        var catLabel = catGo.AddComponent<Text>();
+        catLabel.text = "0/0";
+        catLabel.alignment = TextAnchor.MiddleCenter;
+        catLabel.fontSize = 32;
+        var catCounter = catGo.AddComponent<CatCounter>();
+        var catSo = new SerializedObject(catCounter);
+        catSo.FindProperty("_label").objectReferenceValue = catLabel;
+        catSo.ApplyModifiedPropertiesWithoutUndo();
 
         // Action buttons
         var actionParent = CreateUIObject("ActionButtons", root.transform);
@@ -52,7 +90,8 @@ public static class ViewGameplayPrefabCreator
         var view = root.AddComponent<ViewGameplay>();
         var so = new SerializedObject(view);
         so.FindProperty("_levelLabel").objectReferenceValue      = levelLabel;
-        so.FindProperty("_heartsRoot").objectReferenceValue      = heartsGo.transform;
+        so.FindProperty("_heartBar").objectReferenceValue        = heartBar;
+        so.FindProperty("_catCounter").objectReferenceValue      = catCounter;
         so.FindProperty("_hintButton").objectReferenceValue      = hintButton;
         so.FindProperty("_undoButton").objectReferenceValue      = undoButton;
         so.FindProperty("_restartButton").objectReferenceValue   = restartButton;
@@ -108,6 +147,20 @@ public static class ViewGameplayPrefabCreator
         text.fontSize = 24;
 
         return btn;
+    }
+
+    private static HeartIcon CreateHeartIcon(Transform parent, string name)
+    {
+        var go = CreateUIObject(name, parent);
+        var rt = go.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(48f, 48f);
+        var img = go.AddComponent<Image>();
+        img.color = Color.red;
+        var icon = go.AddComponent<HeartIcon>();
+        var so = new SerializedObject(icon);
+        so.FindProperty("_image").objectReferenceValue = img;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        return icon;
     }
 
     private static GameObject CreateUIObject(string name, Transform parent)

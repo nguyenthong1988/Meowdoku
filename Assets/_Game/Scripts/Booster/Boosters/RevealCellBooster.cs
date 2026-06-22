@@ -29,7 +29,7 @@ namespace Cast.Game.Booster
             {
                 CatPlacement p = solution[i];
                 if (p.ColorIndex != regionColor) continue;
-                session.PlaceCat(p.Row, p.Col);
+                session.Reveal(p.Row, p.Col);
                 return BoosterResult.Ok(Type);
             }
 

@@ -3,19 +3,14 @@ namespace Cast.Game.Gameplay
 
     public enum MoveOutcome : byte
     {
-        
         NoOp = 0,
 
-        Placed = 1,
+        Revealed = 1,
 
-        RemovedCat = 2,
+        Wrong = 2,
 
-        Marked = 3,
+        Hinted = 3,
 
-        Unmarked = 4,
-
-        RejectedIllegal = 5,
-
-        Wrong = 6,
+        Unhinted = 4,
     }
 }

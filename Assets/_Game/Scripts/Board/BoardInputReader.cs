@@ -21,6 +21,10 @@ namespace Cast.Game.Board
         private Vector2 _downScreen;
         private float _downTime;
 
+        private bool _dragging;
+        private bool _dragStarted;
+        private int _dragRow = -1, _dragCol = -1;
+
         private int _lastTapRow = -1, _lastTapCol = -1;
         private float _lastTapTime = -10f;
 
@@ -54,6 +58,10 @@ namespace Cast.Game.Board
         {
             _pressing = true;
             _longFired = false;
+            _dragging = false;
+            _dragStarted = false;
+            _dragRow = -1;
+            _dragCol = -1;
             _downScreen = screen;
             _downTime = Time.unscaledTime;
         }
@@ -61,7 +69,20 @@ namespace Cast.Game.Board
         private void OnPressHold(Vector2 screen)
         {
             if (_longFired) return;
-            if (MovedBeyondSlop(screen)) return;
+
+            if (_dragging)
+            {
+                PumpDrag(screen);
+                return;
+            }
+
+            if (MovedBeyondSlop(screen))
+            {
+                _dragging = true;
+                PumpDrag(_downScreen);   // first cell = where the finger went down
+                PumpDrag(screen);
+                return;
+            }
 
             if (Time.unscaledTime - _downTime >= _config.LongPressDuration)
             {
@@ -73,8 +94,15 @@ namespace Cast.Game.Board
         private void OnPressUp(Vector2 screen)
         {
             _pressing = false;
-            if (_longFired) return;                       
-            if (MovedBeyondSlop(screen)) return;          
+            if (_dragging)
+            {
+                _dragging = false;
+                _dragStarted = false;
+                Gesture?.Invoke(new CellGesture(_dragRow, _dragCol, PointerGesture.DragEnd));
+                return;
+            }
+            if (_longFired) return;
+            if (MovedBeyondSlop(screen)) return;
             if (Time.unscaledTime - _downTime > _config.TapMaxDuration) return;
 
             if (IsOverUI()) return;
@@ -103,13 +131,39 @@ namespace Cast.Game.Board
                 Gesture?.Invoke(new CellGesture(row, col, gesture));
         }
 
+        private void PumpDrag(Vector2 screen)
+        {
+            if (IsOverUI()) return;
+            if (!ScreenToCell(screen, out int row, out int col)) return;
+            if (row == _dragRow && col == _dragCol) return;
+
+            _dragRow = row;
+            _dragCol = col;
+            if (!_dragStarted)
+            {
+                _dragStarted = true;
+                Gesture?.Invoke(new CellGesture(row, col, PointerGesture.DragStart));
+            }
+            else
+            {
+                Gesture?.Invoke(new CellGesture(row, col, PointerGesture.DragMove));
+            }
+        }
+
         private bool MovedBeyondSlop(Vector2 screen) =>
             (screen - _downScreen).sqrMagnitude > _config.TapSlopPixels * _config.TapSlopPixels;
 
+        private static readonly Plane BoardPlane = new Plane(Vector3.forward, Vector3.zero);
+
         private bool ScreenToCell(Vector2 screen, out int row, out int col)
         {
-            Vector3 world = _camera.ScreenToWorldPoint(screen);
-            return _layout.WorldToCell(world, out row, out col);
+            Ray ray = _camera.ScreenPointToRay(screen);
+            if (BoardPlane.Raycast(ray, out float enter))
+                return _layout.WorldToCell(ray.GetPoint(enter), out row, out col);
+
+            row = -1;
+            col = -1;
+            return false;
         }
 
         private static bool IsOverUI() =>

@@ -9,7 +9,6 @@ namespace Cast.Game.Gameplay
 
     public sealed class GameSession : IGameSession
     {
-        private readonly IMoveEvaluator _evaluator;
         private readonly IHintProvider _hints;
         private readonly GameSessionConfig _config;
         private readonly Stack<MoveRecord> _undo = new Stack<MoveRecord>();
@@ -21,9 +20,8 @@ namespace Cast.Game.Gameplay
         private int _moves;
         private float _startTime;
 
-        public GameSession(IMoveEvaluator evaluator, IHintProvider hints, GameSessionConfig config)
+        public GameSession(IHintProvider hints, GameSessionConfig config)
         {
-            _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
             _hints = hints ?? throw new ArgumentNullException(nameof(hints));
             _config = config ?? new GameSessionConfig();
         }
@@ -60,56 +58,52 @@ namespace Cast.Game.Gameplay
 
         public UniTask<GameResult> PlayToEndAsync(CancellationToken ct = default)
         {
-            
             return _endSource.Task;
         }
 
-        public MoveOutcome PlaceCat(int row, int col)
-        {
-            if (_phase != GamePhase.Playing) return MoveOutcome.NoOp;
-
-            MoveOutcome outcome = _evaluator.EvaluatePlacement(Board, row, col);
-            switch (outcome)
-            {
-                case MoveOutcome.Placed:
-                    ApplyMark(row, col, PlayerMark.Cat, costHeart: false);
-                    if (Board.IsSolved()) Finish(won: true);
-                    break;
-                case MoveOutcome.Wrong:
-                    LoseHeart();
-                    MoveRejected?.Invoke(outcome, row, col);
-                    break;
-                case MoveOutcome.RejectedIllegal:
-                    MoveRejected?.Invoke(outcome, row, col);
-                    break;
-            }
-            return outcome;
-        }
-
-        public MoveOutcome RemoveCat(int row, int col)
-        {
-            if (_phase != GamePhase.Playing) return MoveOutcome.NoOp;
-            if (Board.GetMark(row, col) != PlayerMark.Cat) return MoveOutcome.NoOp;
-
-            ApplyMark(row, col, PlayerMark.None, costHeart: false);
-            return MoveOutcome.RemovedCat;
-        }
-
-        public MoveOutcome ToggleMark(int row, int col)
+        public MoveOutcome Reveal(int row, int col)
         {
             if (_phase != GamePhase.Playing) return MoveOutcome.NoOp;
 
             PlayerMark current = Board.GetMark(row, col);
-            if (current == PlayerMark.Cat) return MoveOutcome.NoOp; 
+            if (current == PlayerMark.Cat || current == PlayerMark.Wrong) return MoveOutcome.NoOp;
 
-            if (current == PlayerMark.Blocked)
+            if (Board.Level.GetCell(row, col).HasCat)
             {
-                ApplyMark(row, col, PlayerMark.None, costHeart: false);
-                return MoveOutcome.Unmarked;
+                ApplyMark(row, col, PlayerMark.Cat, costHeart: false);
+                if (Board.IsSolved()) Finish(won: true);
+                return MoveOutcome.Revealed;
             }
 
-            ApplyMark(row, col, PlayerMark.Blocked, costHeart: false);
-            return MoveOutcome.Marked;
+            ApplyMark(row, col, PlayerMark.Wrong, costHeart: true);
+            MoveRejected?.Invoke(MoveOutcome.Wrong, row, col);
+            LoseHeart();
+            return MoveOutcome.Wrong;
+        }
+
+        public MoveOutcome ToggleHint(int row, int col)
+        {
+            if (_phase != GamePhase.Playing) return MoveOutcome.NoOp;
+            return SetHint(row, col, Board.GetMark(row, col) != PlayerMark.Hint);
+        }
+
+        public MoveOutcome SetHint(int row, int col, bool on)
+        {
+            if (_phase != GamePhase.Playing) return MoveOutcome.NoOp;
+
+            PlayerMark current = Board.GetMark(row, col);
+            if (current == PlayerMark.Cat || current == PlayerMark.Wrong) return MoveOutcome.NoOp;
+
+            if (on)
+            {
+                if (current == PlayerMark.Hint) return MoveOutcome.NoOp;
+                ApplyMark(row, col, PlayerMark.Hint, costHeart: false);
+                return MoveOutcome.Hinted;
+            }
+
+            if (current == PlayerMark.None) return MoveOutcome.NoOp;
+            ApplyMark(row, col, PlayerMark.None, costHeart: false);
+            return MoveOutcome.Unhinted;
         }
 
         public bool Undo()

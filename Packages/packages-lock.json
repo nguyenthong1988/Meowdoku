@@ -55,15 +55,15 @@
       "url": "https://package.openupm.com"
     },
     "com.google.firebase.analytics": {
-      "version": "file:Google/com.google.firebase.analytics-12.10.1.tgz",
+      "version": "file:Google/com.google.firebase.analytics-13.12.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
-        "com.google.firebase.app": "12.10.1"
+        "com.google.firebase.app": "13.12.0"
       }
     },
     "com.google.firebase.app": {
-      "version": "file:Google/com.google.firebase.app-12.10.1.tgz",
+      "version": "file:Google/com.google.firebase.app-13.12.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
@@ -71,19 +71,19 @@
       }
     },
     "com.google.firebase.crashlytics": {
-      "version": "file:Google/com.google.firebase.crashlytics-12.10.1.tgz",
+      "version": "file:Google/com.google.firebase.crashlytics-13.12.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
-        "com.google.firebase.app": "12.10.1"
+        "com.google.firebase.app": "13.12.0"
       }
     },
     "com.google.firebase.remote-config": {
-      "version": "file:Google/com.google.firebase.remote-config-12.10.1.tgz",
+      "version": "file:Google/com.google.firebase.remote-config-13.12.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
-        "com.google.firebase.app": "12.10.1"
+        "com.google.firebase.app": "13.12.0"
       }
     },
     "com.unity.2d.animation": {

@@ -77,6 +77,17 @@ namespace Cast.Game.Board
 
         private Transform CellParent => _cellRoot != null ? _cellRoot : transform;
 
+        public void SetVisible(bool visible) => CellParent.gameObject.SetActive(visible);
+
+        public void ClearBoard()
+        {
+            UnbindRendering();
+            Clear();
+            SetVisible(false);
+        }
+
+        public void PrepareReveal() => _reveal?.Prepare(_cells);
+
         public UniTask PlayRevealAsync(CancellationToken ct = default) =>
             _reveal != null ? _reveal.PlayAsync(_cells, Layout, ct) : UniTask.CompletedTask;
 

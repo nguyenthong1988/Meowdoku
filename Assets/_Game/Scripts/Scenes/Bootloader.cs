@@ -10,6 +10,8 @@ namespace Cast.Game
     public class Bootloader : MonoBehaviour
     {
         [SerializeField] private UIManager _uiManager;
+        [SerializeField] private float _splashSeconds = 3f;
+
         private void Start()
         {
             GameRuntime.Register<IUIManager>(_uiManager);
@@ -20,7 +22,10 @@ namespace Cast.Game
 
         private async UniTask ShowSplashSceenAsync()
         {
-            await GameRuntime.Get<IUIManager>().PushViewAsync("ViewSplashScreen", stack: false);
+            var ui = GameRuntime.Get<IUIManager>();
+            await ui.PushTopViewAsync("ViewSplashScreen", stack: false);
+            await UniTask.Delay(System.TimeSpan.FromSeconds(_splashSeconds));
+            await ui.PopTopViewAsync();
         }
     }
 }

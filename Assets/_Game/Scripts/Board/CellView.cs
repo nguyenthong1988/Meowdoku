@@ -11,10 +11,9 @@ namespace Cast.Game.Board
         [SerializeField] private SpriteRenderer _cat;
         [SerializeField] private SpriteRenderer _mark;
 
-        [Tooltip("Cat tint when placed.")]
         [SerializeField] private Color _catColor = new Color(0.15f, 0.15f, 0.18f, 1f);
-        [Tooltip("'Blocked' note tint.")]
-        [SerializeField] private Color _markColor = new Color(0f, 0f, 0f, 0.35f);
+        [SerializeField] private Color _hintColor = new Color(1f, 1f, 1f, 0.9f);
+        [SerializeField] private Color _wrongColor = new Color(0.85f, 0.15f, 0.15f, 1f);
 
         private float _baseScale = 1f;
 
@@ -32,14 +31,18 @@ namespace Cast.Game.Board
 
             if (_background != null) _background.color = color;
             if (_cat != null) _cat.color = _catColor;
-            if (_mark != null) _mark.color = _markColor;
             SetMark(PlayerMark.None);
         }
 
         public void SetMark(PlayerMark mark)
         {
             if (_cat != null) _cat.enabled = mark == PlayerMark.Cat;
-            if (_mark != null) _mark.enabled = mark == PlayerMark.Blocked;
+            if (_mark != null)
+            {
+                bool showMark = mark == PlayerMark.Hint || mark == PlayerMark.Wrong;
+                _mark.enabled = showMark;
+                if (showMark) _mark.color = mark == PlayerMark.Hint ? _hintColor : _wrongColor;
+            }
         }
 
         public void SetHidden(Vector3 offset, float scaleFactor)
@@ -73,7 +76,6 @@ namespace Cast.Game.Board
 
         private void SetAlpha(float a)
         {
-            
             ApplyAlpha(_background, a);
         }
 

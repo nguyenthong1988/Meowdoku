@@ -26,9 +26,9 @@ namespace Cast.Game.Gameplay
 
         UniTask<GameResult> PlayToEndAsync(CancellationToken ct = default);
 
-        MoveOutcome PlaceCat(int row, int col);
-        MoveOutcome RemoveCat(int row, int col);
-        MoveOutcome ToggleMark(int row, int col);
+        MoveOutcome Reveal(int row, int col);
+        MoveOutcome ToggleHint(int row, int col);
+        MoveOutcome SetHint(int row, int col, bool on);
         bool Undo();
         bool Hint();
         void Restart();

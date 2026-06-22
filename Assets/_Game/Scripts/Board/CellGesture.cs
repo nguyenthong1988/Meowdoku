@@ -6,6 +6,9 @@ namespace Cast.Game.Board
         Tap = 0,
         DoubleTap = 1,
         LongPress = 2,
+        DragStart = 3,
+        DragMove = 4,
+        DragEnd = 5,
     }
 
     public readonly struct CellGesture

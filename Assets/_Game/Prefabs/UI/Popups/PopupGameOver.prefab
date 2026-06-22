@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6522273680273123748}
   - component: {fileID: 402192661693152629}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: PopupGameOver
   m_TagString: Untagged
   m_Icon: {fileID: 0}

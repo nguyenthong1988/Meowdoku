@@ -43,9 +43,8 @@ namespace Cast.Game.Flow
 
             var parser = new LevelParser();
             var reader = new LevelDataReader(assets, parser);
-            var evaluator = new MoveEvaluator();
             var hints = new HintProvider();
-            var session = new GameSession(evaluator, hints, _config);
+            var session = new GameSession(hints, _config);
 
             var inventory = new ProfileBoosterInventory(profile);
             var boosters = new BoosterService(
@@ -53,7 +52,7 @@ namespace Cast.Game.Flow
                 new HintBooster(), new RevealCellBooster(), new AddHeartBooster());
 
             _flow = new GameFlow(reader, session, _boardView, interaction, ui, boosters, profile);
-            await _flow.StartLevelAsync();
+            await _flow.RunAsync();
         }
     }
 }
