@@ -1,51 +1,55 @@
+using System;
 using CaskFramework.Profile;
-using CaskFramework.Core;
 using UnityScreenNavigator.Runtime.Core.Page;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using CaskFramework.Core;
+using CaskFramework.UI;
 
-namespace Cast.Game.UI
+namespace Cast.Game
 {
     public sealed class ViewHome : Page
     {
-        [SerializeField] private Text _levelLabel;
-        [SerializeField] private Text _coinLabel;
+        [SerializeField] private TextMeshProUGUI _levelLabel;
         [SerializeField] private Button _playButton;
         [SerializeField] private Button _settingsButton;
 
         private const string CoinKey = "coin";
 
-        private UniTaskCompletionSource<HomeChoice> _choice;
+        private Action _onPlayClicked;
         private IProfileService _profile;
 
-        public UniTask<HomeChoice> WaitForChoiceAsync(IProfileService profile)
+        public void Setup(Action onPlayClicked, IProfileService profile)
         {
+            _onPlayClicked = onPlayClicked;
             _profile = profile;
-            _choice = new UniTaskCompletionSource<HomeChoice>();
-
-            Refresh();
 
             if (_playButton != null)
             {
                 _playButton.onClick.RemoveAllListeners();
-                _playButton.onClick.AddListener(() => _choice.TrySetResult(HomeChoice.Play));
+                _playButton.onClick.AddListener(() => 
+                {
+                    _onPlayClicked?.Invoke();
+                    _onPlayClicked = null;
+                });
             }
+
             if (_settingsButton != null)
             {
                 _settingsButton.onClick.RemoveAllListeners();
-                _settingsButton.onClick.AddListener(() => _choice.TrySetResult(HomeChoice.Settings));
+                _settingsButton.onClick.AddListener(() => 
+                {
+                    GameRuntime.Get<IUIManager>().PushPopup("PopupSettings");
+                });
             }
-            return _choice.Task;
+            Refresh();
         }
 
         public void Refresh()
         {
             if (_profile == null) return;
             if (_levelLabel != null) _levelLabel.text = $"Level {_profile.ProgressLevel}";
-            if (_coinLabel != null) _coinLabel.text = _profile.GetBalance(CoinKey).ToString();
         }
-
-        private void OnDestroy() => _choice?.TrySetResult(HomeChoice.Play);
     }
 }

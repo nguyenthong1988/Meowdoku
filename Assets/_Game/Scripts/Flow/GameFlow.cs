@@ -5,11 +5,11 @@ using Cast.Game.Board;
 using Cast.Game.Booster;
 using Cast.Game.Gameplay;
 using Cast.Game.Level;
-using Cast.Game.UI;
+using Cast.Game;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace Cast.Game.Flow
+namespace Cast.Game
 {
 
     public sealed class GameFlow
@@ -28,8 +28,10 @@ namespace Cast.Game.Flow
         private readonly IProfileService _profile;
 
         private CancellationTokenSource _cts;
+        private bool _initialized = false;
 
         public int CurrentLevelId => _profile.ProgressLevel;
+        public bool IsInitialized => _initialized;
 
         public GameFlow(ILevelDataReader reader, IGameSession session, BoardView board,
                         BoardInputHandler interaction, IUIManager ui, IBoosterService boosters,
@@ -42,33 +44,34 @@ namespace Cast.Game.Flow
             _ui = ui;
             _boosters = boosters;
             _profile = profile;
+
+            _initialized = true;
         }
 
         public async UniTask RunAsync()
         {
-            _board.SetVisible(false);
-            bool skipHome = _profile.ProgressLevel <= 1;
-            while (true)
-            {
-                if (!skipHome)
-                    await ShowHomeUntilPlayAsync();
-                skipHome = false;
+            // _board.SetVisible(false);
+            // bool skipHome = _profile.ProgressLevel <= 1;
+            // while (true)
+            // {
+            //     if (!skipHome)
+            //         await ShowHomeUntilPlayAsync();
+            //     skipHome = false;
 
-                await PlayLevelsAsync();
-            }
+            //     await PlayLevelsAsync();
+            // }
+
+            await PlayLevelsAsync();
         }
 
-        private async UniTask ShowHomeUntilPlayAsync()
+        public async UniTask ShowHomeAsync()
         {
             ViewHome home = null;
-            await _ui.PushViewAsync<ViewHome>(
-                ViewHomeName,
-                stack: false,
-                onLoad: (_, v) => home = v);
+            await _ui.PushViewAsync<ViewHome>(ViewHomeName, stack: false, onLoad: (_, v) => home = v);
 
             if (home == null) return;
 
-            while (await home.WaitForChoiceAsync(_profile) != HomeChoice.Play) { }
+            // while (await home.WaitForChoiceAsync(_profile) != HomeChoice.Play) { }
         }
 
         private async UniTask PlayLevelsAsync()

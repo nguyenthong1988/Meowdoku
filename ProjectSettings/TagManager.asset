@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!78 &1
 TagManager:
-  serializedVersion: 2
+  serializedVersion: 3
   tags: []
   layers:
   - Default
@@ -11,11 +11,11 @@ TagManager:
   - Draggable
   - Water
   - UI
+  - Background
+  - Gameplay
+  - Effect
   - Highlight
   - Outline
-  - 
-  - 
-  - 
   - 
   - 
   - 
@@ -41,3 +41,17 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Background
+    uniqueID: 2624590129
+    locked: 0
+  - name: Gameplay
+    uniqueID: 1968274079
+    locked: 0
+  - name: UI
+    uniqueID: 1068228319
+    locked: 0
+  - name: Effect
+    uniqueID: 1658676959
+    locked: 0
+  m_RenderingLayers:
+  - Default

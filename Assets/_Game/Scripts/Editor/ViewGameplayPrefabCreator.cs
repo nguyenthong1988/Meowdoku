@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
-using Cast.Game.UI;
+using Cast.Game;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;

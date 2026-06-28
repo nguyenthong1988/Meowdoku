@@ -9,40 +9,33 @@ namespace Cast.Game.Board
     {
         [SerializeField] private SpriteRenderer _background;
         [SerializeField] private SpriteRenderer _cat;
-        [SerializeField] private SpriteRenderer _mark;
-
-        [SerializeField] private Color _catColor = new Color(0.15f, 0.15f, 0.18f, 1f);
-        [SerializeField] private Color _hintColor = new Color(1f, 1f, 1f, 0.9f);
-        [SerializeField] private Color _wrongColor = new Color(0.85f, 0.15f, 0.15f, 1f);
+        [SerializeField] private SpriteRenderer _markHint;
+        [SerializeField] private SpriteRenderer _markWrong;
+        [SerializeField] private SpriteAsset _spriteAsset;
 
         private float _baseScale = 1f;
 
         public int Row { get; private set; }
         public int Col { get; private set; }
 
-        public void SetCell(int row, int col, Color color, float cellSize)
+        public void SetCell(int row, int col, int colorIndex, float cellSize)
         {
             Row = row;
             Col = col;
             _baseScale = cellSize;
 
-            EnsureSprites();
             transform.localScale = Vector3.one * _baseScale;
 
-            if (_background != null) _background.color = color;
-            if (_cat != null) _cat.color = _catColor;
+            if (_background != null) _background.sprite = _spriteAsset.GetSprite(colorIndex) != null ? _spriteAsset.GetSprite(colorIndex) : PlaceholderSprites.Square;
+
             SetMark(PlayerMark.None);
         }
 
         public void SetMark(PlayerMark mark)
         {
             if (_cat != null) _cat.enabled = mark == PlayerMark.Cat;
-            if (_mark != null)
-            {
-                bool showMark = mark == PlayerMark.Hint || mark == PlayerMark.Wrong;
-                _mark.enabled = showMark;
-                if (showMark) _mark.color = mark == PlayerMark.Hint ? _hintColor : _wrongColor;
-            }
+            if (_markHint != null) _markHint.enabled = mark == PlayerMark.Hint;
+            if (_markWrong != null) _markWrong.enabled = mark == PlayerMark.Wrong;
         }
 
         public void SetHidden(Vector3 offset, float scaleFactor)
@@ -87,11 +80,16 @@ namespace Cast.Game.Board
             sr.color = col;
         }
 
-        private void EnsureSprites()
+        [System.Serializable]
+        private struct SpriteAsset
         {
-            if (_background != null && _background.sprite == null) _background.sprite = PlaceholderSprites.Square;
-            if (_cat != null && _cat.sprite == null) _cat.sprite = PlaceholderSprites.Circle;
-            if (_mark != null && _mark.sprite == null) _mark.sprite = PlaceholderSprites.Circle;
+            public Sprite[] Sprites;
+            
+            public Sprite GetSprite(int index)
+            {
+                if (Sprites == null || Sprites.Length == 0) return null;
+                return Sprites[Mathf.Clamp(index, 0, Sprites.Length - 1)];
+            }
         }
     }
 }

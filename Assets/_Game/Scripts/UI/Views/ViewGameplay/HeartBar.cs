@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Cast.Game.Gameplay;
 using UnityEngine;
 
-namespace Cast.Game.UI
+namespace Cast.Game
 {
     public sealed class HeartBar : MonoBehaviour
     {

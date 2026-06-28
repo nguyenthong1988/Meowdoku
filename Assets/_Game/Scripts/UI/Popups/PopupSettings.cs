@@ -4,65 +4,77 @@ using UnityScreenNavigator.Runtime.Core.Modal;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using System;
+using CaskFramework.UI;
 
-namespace Cast.Game.UI
+namespace Cast.Game
 {
     public sealed class PopupSettings : Modal
     {
-        [SerializeField] private Button _musicButton;
-        [SerializeField] private Text _musicLabel;
-        [SerializeField] private Button _sfxButton;
-        [SerializeField] private Text _sfxLabel;
+        [SerializeField] private UISliderToggle _musicToggle;
+        [SerializeField] private UISliderToggle _sfxToggle;
+        [SerializeField] private UISliderToggle _vibrationToggle;
+        [SerializeField] private Button _feedbackButton;
+        [SerializeField] private Button _termsButton;
+        [SerializeField] private Button _privacyButton;
         [SerializeField] private Button _closeButton;
+        [SerializeField] private TextMeshProUGUI _versionText;
 
-        private UniTaskCompletionSource _closed;
         private IAudioManager _audio;
 
-        public UniTask WaitForCloseAsync()
+        public override UniTask Initialize(Memory<object> args)
         {
-            _closed = new UniTaskCompletionSource();
-            GameRuntime.TryGet(out _audio);
-
-            if (_musicButton != null)
+            if (_musicToggle != null)
             {
-                _musicButton.onClick.RemoveAllListeners();
-                _musicButton.onClick.AddListener(ToggleMusic);
+                _musicToggle.onValueChanged.RemoveAllListeners();
+                _musicToggle.onValueChanged.AddListener(ToggleMusic);
+                _musicToggle.Init(_audio?.IsMusicOn ?? true);
             }
-            if (_sfxButton != null)
+            if (_sfxToggle != null)
             {
-                _sfxButton.onClick.RemoveAllListeners();
-                _sfxButton.onClick.AddListener(ToggleSfx);
+                _sfxToggle.onValueChanged.RemoveAllListeners();
+                _sfxToggle.onValueChanged.AddListener(ToggleSfx);
+                _sfxToggle.Init(_audio?.IsSfxOn ?? true);
+            }
+            if (_vibrationToggle != null)
+            {
+                _vibrationToggle.onValueChanged.RemoveAllListeners();
+                _vibrationToggle.onValueChanged.AddListener(ToggleVibration);
+                _vibrationToggle.Init(true);
             }
             if (_closeButton != null)
             {
                 _closeButton.onClick.RemoveAllListeners();
-                _closeButton.onClick.AddListener(() => _closed.TrySetResult());
+                _closeButton.onClick.AddListener(() =>
+                {
+                    GameRuntime.Get<IUIManager>().PopPopup();
+                });
             }
 
             RefreshLabels();
-            return _closed.Task;
+            return base.Initialize(args);
         }
 
-        private void ToggleMusic()
+        private void ToggleMusic(bool isOn)
         {
             _audio?.ToggleMusic();
             RefreshLabels();
         }
 
-        private void ToggleSfx()
+        private void ToggleSfx(bool isOn)
         {
             _audio?.ToggleSfx();
             RefreshLabels();
         }
 
-        private void RefreshLabels()
+        private void ToggleVibration(bool isOn)
         {
-            bool musicOn = _audio == null || _audio.IsMusicOn;
-            bool sfxOn = _audio == null || _audio.IsSfxOn;
-            if (_musicLabel != null) _musicLabel.text = musicOn ? "Music: On" : "Music: Off";
-            if (_sfxLabel != null) _sfxLabel.text = sfxOn ? "Sound: On" : "Sound: Off";
+            RefreshLabels();
         }
 
-        private void OnDestroy() => _closed?.TrySetResult();
+        private void RefreshLabels()
+        {
+        }
     }
 }

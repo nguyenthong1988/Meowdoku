@@ -9,7 +9,7 @@ using Cast.Game.Level;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace Cast.Game.Flow
+namespace Cast.Game
 {
 
     public sealed class GameSceneEntry : MonoBehaviour
@@ -52,6 +52,13 @@ namespace Cast.Game.Flow
                 new HintBooster(), new RevealCellBooster(), new AddHeartBooster());
 
             _flow = new GameFlow(reader, session, _boardView, interaction, ui, boosters, profile);
+        }
+
+        public bool IsInitialized => _flow != null && _flow.IsInitialized;
+
+        public async UniTask RunFlowAsync()
+        {
+            if (_flow == null) return;
             await _flow.RunAsync();
         }
     }

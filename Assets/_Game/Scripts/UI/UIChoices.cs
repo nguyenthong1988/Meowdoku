@@ -1,4 +1,4 @@
-namespace Cast.Game.UI
+namespace Cast.Game
 {
     public enum HomeChoice : byte
     {

@@ -1,4 +1,4 @@
-namespace Cast.Game.Flow
+namespace Cast.Game
 {
     
     public enum ResultChoice : byte

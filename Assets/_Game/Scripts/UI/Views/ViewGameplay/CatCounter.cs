@@ -2,7 +2,7 @@ using Cast.Game.Gameplay;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Cast.Game.UI
+namespace Cast.Game
 {
     public sealed class CatCounter : MonoBehaviour
     {

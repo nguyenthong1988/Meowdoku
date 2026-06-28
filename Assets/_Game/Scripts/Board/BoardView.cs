@@ -14,6 +14,11 @@ namespace Cast.Game.Board
         [SerializeField] private Camera _camera;
         [SerializeField] private Transform _cellRoot;
         [SerializeField] private string _cellAddress = "CellView";
+        [Header("Cell Settings")]
+        [SerializeField] private float _cellSize = 1f;
+        [SerializeField] private float _cellSpacing = 0.1f;
+        [SerializeField] private SpriteRenderer _cellBackground;
+
         [SerializeField] private float _padding = 0.5f;
         [SerializeField] private BoardRevealConfig _revealConfig = new BoardRevealConfig();
 
@@ -48,7 +53,7 @@ namespace Cast.Game.Board
         {
             Clear();
             int size = level.Size;
-            Layout = BoardLayout.Fit(size, _camera, _padding);   
+            Layout = BoardLayout.Fit(size, _camera, _padding);
             _grid = new CellView[size, size];
 
             if (!_pool.IsReady)
@@ -56,6 +61,15 @@ namespace Cast.Game.Board
 
             List<CellView> cells = _pool.Take(size * size, _cellRoot);
             if (cells == null) return;
+
+            if (_cellBackground != null)
+            {
+                float boardSpan = Layout.Size * Layout.CellSize;
+                _cellBackground.size = new Vector2(boardSpan + 0.75f * _padding, boardSpan + 0.75f * _padding);
+                float cx = Layout.Origin.x + (Layout.Size - 1) * 0.5f * Layout.CellSize;
+                float cy = Layout.Origin.y - (Layout.Size - 1) * 0.5f * Layout.CellSize;
+                _cellBackground.transform.position = new Vector3(cx, cy, _cellBackground.transform.position.z);
+            }
 
             int i = 0;
             for (int r = 0; r < size; r++)
@@ -67,8 +81,7 @@ namespace Cast.Game.Board
                     CellData data = level.GetCell(r, c);
 
                     cell.transform.position = Layout.CellToWorld(r, c);
-                    Color color = DefaultPalette.Resolve(level.Colors, data.ColorIndex);
-                    cell.SetCell(r, c, color, Layout.CellSize);   
+                    cell.SetCell(r, c, data.ColorIndex, Layout.CellSize);
                     _cells.Add(cell);
                     _grid[r, c] = cell;
                 }

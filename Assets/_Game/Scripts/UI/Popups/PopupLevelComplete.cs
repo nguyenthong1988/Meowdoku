@@ -1,11 +1,10 @@
-using Cast.Game.Flow;
 using Cast.Game.Gameplay;
 using UnityScreenNavigator.Runtime.Core.Modal;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Cast.Game.UI
+namespace Cast.Game
 {
 
     public sealed class PopupLevelComplete : Modal

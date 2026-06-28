@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Cast.Game.UI
+namespace Cast.Game
 {
     public sealed class PopupLose : Modal
     {
