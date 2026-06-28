@@ -1,6 +1,6 @@
 using System;
 
-namespace Cast.Game.Booster
+namespace Cast.Game
 {
 
     public interface IBoosterInventory

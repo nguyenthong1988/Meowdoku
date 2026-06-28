@@ -1,8 +1,8 @@
 using System.Threading;
-using Cast.Game.Gameplay;
+
 using Cysharp.Threading.Tasks;
 
-namespace Cast.Game.Booster
+namespace Cast.Game
 {
 
     public sealed class HintBooster : IBooster
@@ -13,7 +13,7 @@ namespace Cast.Game.Booster
         public bool CanUse(IGameSession session) =>
             session != null && session.Phase == GamePhase.Playing;
 
-        public async UniTask<BoosterResult> UseAsync(BoosterContext ctx, CancellationToken ct)
+        public async UniTask<BoosterResult> UseAsync(BoosterController ctx, CancellationToken ct)
         {
             
             bool applied = ctx.Session.Hint();

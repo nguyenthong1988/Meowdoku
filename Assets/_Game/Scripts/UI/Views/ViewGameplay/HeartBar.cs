@@ -1,14 +1,12 @@
 using System.Collections.Generic;
-using Cast.Game.Gameplay;
+
 using UnityEngine;
 
 namespace Cast.Game
 {
     public sealed class HeartBar : MonoBehaviour
     {
-        [SerializeField] private HeartIcon _heartPrefab;
-        [SerializeField] private Transform _container;
-        [SerializeField] private List<HeartIcon> _hearts = new List<HeartIcon>();
+        [SerializeField] private List<HeartIcon> _hearts;
 
         private IGameSession _session;
 
@@ -25,14 +23,6 @@ namespace Cast.Game
 
         private void Build(int max)
         {
-            if (_heartPrefab == null || _container == null) return;
-
-            for (int i = _hearts.Count; i < max; i++)
-            {
-                var icon = Instantiate(_heartPrefab, _container);
-                _hearts.Add(icon);
-            }
-
             for (int i = 0; i < _hearts.Count; i++)
                 if (_hearts[i] != null)
                     _hearts[i].gameObject.SetActive(i < max);

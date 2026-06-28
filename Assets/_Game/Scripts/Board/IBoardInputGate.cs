@@ -1,7 +1,7 @@
-namespace Cast.Game.Board
+namespace Cast.Game
 {
 
-    public interface IBoardInputGate
+    public interface IBoardInput
     {
         BoardInputMode Mode { get; }
         void SetMode(BoardInputMode mode);

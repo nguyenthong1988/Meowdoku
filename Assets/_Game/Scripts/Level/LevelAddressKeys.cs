@@ -1,4 +1,4 @@
-namespace Cast.Game.Level
+namespace Cast.Game
 {
 
     public static class LevelAddressKeys

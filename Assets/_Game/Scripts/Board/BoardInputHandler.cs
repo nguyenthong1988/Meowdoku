@@ -1,12 +1,11 @@
 using System;
 using System.Threading;
-using Cast.Game.Gameplay;
 using Cysharp.Threading.Tasks;
 
-namespace Cast.Game.Board
+namespace Cast.Game
 {
 
-    public sealed class BoardInputHandler : IBoardInputGate, IBoardTargeting
+    public sealed class BoardInputHandler : IBoardInput, IBoardTargeting
     {
         private readonly BoardInputReader _reader;
         private readonly BoardView _board;

@@ -2,10 +2,10 @@ using CaskFramework.Assets;
 using CaskFramework.Core;
 using CaskFramework.Profile;
 using CaskFramework.UI;
-using Cast.Game.Board;
-using Cast.Game.Booster;
-using Cast.Game.Gameplay;
-using Cast.Game.Level;
+
+
+
+
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -44,12 +44,13 @@ namespace Cast.Game
             var parser = new LevelParser();
             var reader = new LevelDataReader(assets, parser);
             var hints = new HintProvider();
-            var session = new GameSession(hints, _config);
+            var session = new GameSession(hints, _config, profile);
 
             var inventory = new ProfileBoosterInventory(profile);
-            var boosters = new BoosterService(
+            var boosters = new BoosterController(
                 session, interaction, interaction, _boardView, inventory,
-                new HintBooster(), new RevealCellBooster(), new AddHeartBooster());
+                new SmartHintBooster(), new RevealBooster(),
+                new UndoBooster(), new ClearHintsBooster());
 
             _flow = new GameFlow(reader, session, _boardView, interaction, ui, boosters, profile);
         }

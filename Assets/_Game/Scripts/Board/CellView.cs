@@ -1,8 +1,8 @@
-using Cast.Game.Gameplay;
+
 using LitMotion;
 using UnityEngine;
 
-namespace Cast.Game.Board
+namespace Cast.Game
 {
 
     public sealed class CellView : MonoBehaviour
@@ -17,11 +17,13 @@ namespace Cast.Game.Board
 
         public int Row { get; private set; }
         public int Col { get; private set; }
+        public int ColorIndex { get; private set; }
 
         public void SetCell(int row, int col, int colorIndex, float cellSize)
         {
             Row = row;
             Col = col;
+            ColorIndex = colorIndex;
             _baseScale = cellSize;
 
             transform.localScale = Vector3.one * _baseScale;

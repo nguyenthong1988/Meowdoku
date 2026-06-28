@@ -1,13 +1,11 @@
-namespace Cast.Game.Booster
+namespace Cast.Game
 {
 
     public enum BoosterType : byte
     {
-        
         Hint = 0,
-
-        RevealCell = 1,
-
-        AddHeart = 2,
+        Undo = 1,
+        Reveal = 2,
+        ClearHints = 3,
     }
 }

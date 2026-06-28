@@ -1,4 +1,4 @@
-namespace Cast.Game.Booster
+namespace Cast.Game
 {
 
     public readonly struct BoosterResult

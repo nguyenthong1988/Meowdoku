@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Cast.Game.Gameplay
+namespace Cast.Game
 {
 
     [Serializable]
@@ -9,5 +9,7 @@ namespace Cast.Game.Gameplay
     {
         [Min(1)] public int HeartsMax = 3;
         [Min(0)] public int HintsMax = 3;
+        [Min(1)] public int HintUnlockLevel = 2;
+        [Min(1)] public int RevealUnlockLevel = 2;
     }
 }

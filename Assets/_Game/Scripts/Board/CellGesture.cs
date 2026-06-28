@@ -1,4 +1,4 @@
-namespace Cast.Game.Board
+namespace Cast.Game
 {
     
     public enum PointerGesture : byte

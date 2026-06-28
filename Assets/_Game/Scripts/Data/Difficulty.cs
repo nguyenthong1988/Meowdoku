@@ -1,4 +1,4 @@
-namespace Cast.Game.Data
+namespace Cast.Game
 {
 
     public enum Difficulty : byte

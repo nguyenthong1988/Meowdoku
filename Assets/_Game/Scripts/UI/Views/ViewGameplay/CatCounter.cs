@@ -1,4 +1,5 @@
-using Cast.Game.Gameplay;
+
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,8 +7,7 @@ namespace Cast.Game
 {
     public sealed class CatCounter : MonoBehaviour
     {
-        [SerializeField] private Text _label;
-        [SerializeField] private Image _fillBar;
+        [SerializeField] private TextMeshProUGUI _counterText;
 
         private IGameSession _session;
         private int _total;
@@ -35,8 +35,7 @@ namespace Cast.Game
         private void Refresh()
         {
             int found = Found;
-            if (_label != null) _label.text = $"{found}/{_total}";
-            if (_fillBar != null) _fillBar.fillAmount = _total > 0 ? (float)found / _total : 0f;
+            _counterText.text = $"<color=#436E35>{found}</color>/<color=#695458>{Total}</color>";
         }
 
         private void Unbind()

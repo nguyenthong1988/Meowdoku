@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
-namespace Cast.Game.Board
+namespace Cast.Game
 {
 
     public sealed class BoardInputReader : MonoBehaviour

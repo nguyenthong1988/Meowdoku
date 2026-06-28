@@ -1,8 +1,9 @@
+using System;
 using System.Threading;
-using Cast.Game.Gameplay;
+
 using Cysharp.Threading.Tasks;
 
-namespace Cast.Game.Booster
+namespace Cast.Game
 {
 
     public interface IBooster
@@ -12,6 +13,12 @@ namespace Cast.Game.Booster
 
         bool CanUse(IGameSession session);
 
-        UniTask<BoosterResult> UseAsync(BoosterContext ctx, CancellationToken ct);
+        UniTask<BoosterResult> UseAsync(BoosterController ctx, CancellationToken ct);
+        //bool IsBusy { get; }
+
+        // UniTask<BoosterResult> UseAsync(BoosterType type, CancellationToken ct = default);
+
+        // event Action<BoosterType> BoosterStarted;
+        // event Action<BoosterResult> BoosterFinished;
     }
 }

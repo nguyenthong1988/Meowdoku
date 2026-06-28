@@ -1,10 +1,7 @@
 fileFormatVersion: 2
-guid: 0fc1c74f16405401db0932d6815d5144
+guid: e4a02cda83f3047eaa8825cc65721921
 TextureImporter:
-  internalIDToNameTable:
-  - first:
-      213: -1766006069671443837
-    second: fog_0
+  internalIDToNameTable: []
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +123,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: fog_0
+      name: LotusPool_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 4
-        width: 256
-        height: 247
+        y: 0
+        width: 1020
+        height: 928
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +138,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 382cc0a16d2ed77e0800000000000000
-      internalID: -1766006069671443837
+      spriteID: aa97efd91e41d1970800000000000000
+      internalID: 8727154612164786602
       vertices: []
       indices: 
       edges: []
@@ -161,7 +158,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      fog_0: -1766006069671443837
+      LotusPool_0: 8727154612164786602
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

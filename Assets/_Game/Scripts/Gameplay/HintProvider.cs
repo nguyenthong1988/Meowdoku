@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Cast.Game.Data;
+using Cast.Game;
 
-namespace Cast.Game.Gameplay
+namespace Cast.Game
 {
 
     public sealed class HintProvider : IHintProvider

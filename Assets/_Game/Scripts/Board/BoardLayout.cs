@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Cast.Game.Board
+namespace Cast.Game
 {
 
     public readonly struct BoardLayout

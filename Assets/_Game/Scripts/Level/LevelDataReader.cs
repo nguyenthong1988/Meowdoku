@@ -2,7 +2,7 @@ using System;
 using CaskFramework.Assets;
 using Cysharp.Threading.Tasks;
 
-namespace Cast.Game.Level
+namespace Cast.Game
 {
 
     public sealed class LevelDataReader : ILevelDataReader

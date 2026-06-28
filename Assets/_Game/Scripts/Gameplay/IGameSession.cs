@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
-using Cast.Game.Data;
+using Cast.Game;
 using Cysharp.Threading.Tasks;
 
-namespace Cast.Game.Gameplay
+namespace Cast.Game
 {
 
     public interface IGameSession
@@ -34,7 +35,11 @@ namespace Cast.Game.Gameplay
         void Restart();
 
         bool AddHeart();
-
+        bool UndoWrong();
+        bool RandomReveal();
+        bool ClearAllHints();
+        List<(int row, int col)> GetHintCells();
+        bool IsBoosterUnlocked(BoosterType type);
         void Dispose();
     }
 }

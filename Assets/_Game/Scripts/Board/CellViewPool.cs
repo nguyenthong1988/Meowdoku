@@ -5,7 +5,7 @@ using CaskFramework.Assets.Pool;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace Cast.Game.Board
+namespace Cast.Game
 {
 
     public sealed class CellViewPool

@@ -1,4 +1,4 @@
-namespace Cast.Game.Gameplay
+namespace Cast.Game
 {
 
     public enum GamePhase : byte

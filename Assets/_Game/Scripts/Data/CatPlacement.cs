@@ -1,4 +1,4 @@
-namespace Cast.Game.Data
+namespace Cast.Game
 {
 
     public readonly struct CatPlacement

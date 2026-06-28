@@ -2,10 +2,10 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
-namespace Cast.Game.Booster
+namespace Cast.Game
 {
 
-    public interface IBoosterService
+    public interface IBoosterController
     {
         bool IsBusy { get; }
 

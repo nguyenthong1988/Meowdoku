@@ -1,6 +1,6 @@
-using Cast.Game.Data;
+using Cast.Game;
 
-namespace Cast.Game.Level
+namespace Cast.Game
 {
 
     public interface ILevelValidator

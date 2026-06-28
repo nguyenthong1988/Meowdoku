@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Cast.Game.Data
+namespace Cast.Game
 {
 
     [Serializable]

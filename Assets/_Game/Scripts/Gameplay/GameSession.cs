@@ -1,16 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Cast.Game.Data;
+using CaskFramework.Profile;
+
+using Cast.Game;
 using Cysharp.Threading.Tasks;
 
-namespace Cast.Game.Gameplay
+namespace Cast.Game
 {
-
     public sealed class GameSession : IGameSession
     {
         private readonly IHintProvider _hints;
         private readonly GameSessionConfig _config;
+        private IProfileService _profile;
         private readonly Stack<MoveRecord> _undo = new Stack<MoveRecord>();
 
         private UniTaskCompletionSource<GameResult> _endSource;
@@ -20,10 +22,11 @@ namespace Cast.Game.Gameplay
         private int _moves;
         private float _startTime;
 
-        public GameSession(IHintProvider hints, GameSessionConfig config)
+        public GameSession(IHintProvider hints, GameSessionConfig config, IProfileService profile)
         {
             _hints = hints ?? throw new ArgumentNullException(nameof(hints));
             _config = config ?? new GameSessionConfig();
+            _profile = profile ?? throw new ArgumentNullException(nameof(profile));
         }
 
         public LevelData Level { get; private set; }
@@ -183,6 +186,151 @@ namespace Cast.Game.Gameplay
             if (_phase != GamePhase.Playing || _hearts >= _config.HeartsMax) return false;
             GainHeart();
             return true;
+        }
+
+        public bool UndoWrong()
+        {
+            if (_phase != GamePhase.Playing) return false;
+
+            var temp = new Stack<MoveRecord>();
+            while (_undo.Count > 0)
+            {
+                MoveRecord rec = _undo.Pop();
+                if (rec.CostHeart)
+                {
+                    Board.SetMark(rec.Row, rec.Col, rec.From);
+                    CellChanged?.Invoke(new CellChange(rec.Row, rec.Col, rec.To, rec.From));
+                    GainHeart();
+
+                    while (temp.Count > 0) _undo.Push(temp.Pop());
+                    return true;
+                }
+                temp.Push(rec);
+            }
+
+            while (temp.Count > 0) _undo.Push(temp.Pop());
+            return false;
+        }
+
+        public bool RandomReveal()
+        {
+            if (_phase != GamePhase.Playing) return false;
+
+            var unrevealed = new List<CatPlacement>();
+            IReadOnlyList<CatPlacement> solution = Level.Solution;
+            for (int i = 0; i < solution.Count; i++)
+            {
+                CatPlacement p = solution[i];
+                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Cat)
+                    unrevealed.Add(p);
+            }
+
+            if (unrevealed.Count == 0) return false;
+
+            CatPlacement pick = unrevealed[UnityEngine.Random.Range(0, unrevealed.Count)];
+            Reveal(pick.Row, pick.Col);
+            return true;
+        }
+
+        public bool ClearAllHints()
+        {
+            if (_phase != GamePhase.Playing) return false;
+
+            bool cleared = false;
+            int size = Board.Size;
+            for (int r = 0; r < size; r++)
+            {
+                for (int c = 0; c < size; c++)
+                {
+                    if (Board.GetMark(r, c) != PlayerMark.Hint) continue;
+                    Board.SetMark(r, c, PlayerMark.None);
+                    CellChanged?.Invoke(new CellChange(r, c, PlayerMark.Hint, PlayerMark.None));
+                    cleared = true;
+                }
+            }
+            return cleared;
+        }
+
+        public List<(int row, int col)> GetHintCells()
+        {
+            var result = new List<(int, int)>();
+            if (_phase != GamePhase.Playing) return result;
+
+            IReadOnlyList<CatPlacement> solution = Level.Solution;
+
+            var unrevealed = new List<CatPlacement>();
+            for (int i = 0; i < solution.Count; i++)
+            {
+                CatPlacement p = solution[i];
+                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Cat)
+                    unrevealed.Add(p);
+            }
+
+            if (unrevealed.Count <= 3) return result;
+
+            CatPlacement target = unrevealed[UnityEngine.Random.Range(0, unrevealed.Count)];
+            sbyte hintColor = target.ColorIndex;
+
+            var excludedCells = new HashSet<(int, int)>();
+            for (int i = 0; i < solution.Count; i++)
+            {
+                CatPlacement p = solution[i];
+                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Cat) continue;
+
+                for (int dr = -1; dr <= 1; dr++)
+                {
+                    for (int dc = -1; dc <= 1; dc++)
+                    {
+                        int nr = p.Row + dr;
+                        int nc = p.Col + dc;
+                        if (Board.InBounds(nr, nc))
+                            excludedCells.Add((nr, nc));
+                    }
+                }
+            }
+
+            var catRows = new HashSet<int>();
+            var catCols = new HashSet<int>();
+            for (int i = 0; i < solution.Count; i++)
+            {
+                CatPlacement p = solution[i];
+                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Cat) continue;
+                catRows.Add(p.Row);
+                catCols.Add(p.Col);
+            }
+
+            int size = Board.Size;
+            for (int r = 0; r < size; r++)
+            {
+                for (int c = 0; c < size; c++)
+                {
+                    CellData cell = Level.GetCell(r, c);
+                    if (!cell.IsFilled) continue;
+                    if (cell.ColorIndex != hintColor) continue;
+                    if (cell.HasCat) continue;
+                    if (Board.GetMark(r, c) == PlayerMark.Cat) continue;
+                    if (catRows.Contains(r)) continue;
+                    if (catCols.Contains(c)) continue;
+                    if (excludedCells.Contains((r, c))) continue;
+
+                    result.Add((r, c));
+                }
+            }
+
+            return result;
+        }
+
+        public bool IsBoosterUnlocked(BoosterType type)
+        {
+            switch (type)
+            {
+                case BoosterType.Hint:
+                    return _profile.ProgressLevel >= _config.HintUnlockLevel;
+                case BoosterType.Reveal:
+                    return _profile.ProgressLevel >= _config.RevealUnlockLevel;
+                default:
+                    return false;
+            }
         }
 
         private void SetPhase(GamePhase phase)

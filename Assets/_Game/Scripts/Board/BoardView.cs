@@ -1,12 +1,10 @@
 using System.Collections.Generic;
 using System.Threading;
 using CaskFramework.Assets;
-using Cast.Game.Data;
-using Cast.Game.Gameplay;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace Cast.Game.Board
+namespace Cast.Game
 {
 
     public sealed class BoardView : MonoBehaviour
@@ -21,6 +19,8 @@ namespace Cast.Game.Board
 
         [SerializeField] private float _padding = 0.5f;
         [SerializeField] private BoardRevealConfig _revealConfig = new BoardRevealConfig();
+
+        [SerializeField] private SpriteRendererSnap[] _spriteSnaps;
 
         private CellViewPool _pool;
         private IBoardRevealAnimation _reveal;
@@ -86,6 +86,11 @@ namespace Cast.Game.Board
                     _grid[r, c] = cell;
                 }
             }
+
+            // foreach (var snap in _spriteSnaps)
+            // {
+            //     snap.Snap();
+            // }
         }
 
         private Transform CellParent => _cellRoot != null ? _cellRoot : transform;

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Cast.Game.Board
+namespace Cast.Game
 {
     
     [Serializable]

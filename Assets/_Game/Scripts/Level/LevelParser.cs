@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Cast.Game.Data;
+using Cast.Game;
 using UnityEngine;
 
-namespace Cast.Game.Level
+namespace Cast.Game
 {
 
     public sealed class LevelParser : ILevelParser

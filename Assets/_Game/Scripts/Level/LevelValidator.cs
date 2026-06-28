@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Cast.Game.Data;
+using Cast.Game;
 
-namespace Cast.Game.Level
+namespace Cast.Game
 {
 
     public sealed class LevelValidator : ILevelValidator

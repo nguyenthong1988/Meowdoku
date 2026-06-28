@@ -1,11 +1,7 @@
 using System.Threading;
 using CaskFramework.Profile;
 using CaskFramework.UI;
-using Cast.Game.Board;
-using Cast.Game.Booster;
-using Cast.Game.Gameplay;
-using Cast.Game.Level;
-using Cast.Game;
+
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -24,7 +20,7 @@ namespace Cast.Game
         private readonly BoardView _board;
         private readonly BoardInputHandler _interaction;
         private readonly IUIManager _ui;
-        private readonly IBoosterService _boosters;
+        private readonly IBoosterController _boosters;
         private readonly IProfileService _profile;
 
         private CancellationTokenSource _cts;
@@ -34,7 +30,7 @@ namespace Cast.Game
         public bool IsInitialized => _initialized;
 
         public GameFlow(ILevelDataReader reader, IGameSession session, BoardView board,
-                        BoardInputHandler interaction, IUIManager ui, IBoosterService boosters,
+                        BoardInputHandler interaction, IUIManager ui, IBoosterController boosters,
                         IProfileService profile)
         {
             _reader = reader;
