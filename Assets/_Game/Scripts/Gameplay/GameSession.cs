@@ -69,11 +69,11 @@ namespace Cast.Game
             if (_phase != GamePhase.Playing) return MoveOutcome.NoOp;
 
             PlayerMark current = Board.GetMark(row, col);
-            if (current == PlayerMark.Cat || current == PlayerMark.Wrong) return MoveOutcome.NoOp;
+            if (current == PlayerMark.Character || current == PlayerMark.Wrong) return MoveOutcome.NoOp;
 
             if (Board.Level.GetCell(row, col).HasCat)
             {
-                ApplyMark(row, col, PlayerMark.Cat, costHeart: false);
+                ApplyMark(row, col, PlayerMark.Character, costHeart: false);
                 if (Board.IsSolved()) Finish(won: true);
                 return MoveOutcome.Revealed;
             }
@@ -95,7 +95,7 @@ namespace Cast.Game
             if (_phase != GamePhase.Playing) return MoveOutcome.NoOp;
 
             PlayerMark current = Board.GetMark(row, col);
-            if (current == PlayerMark.Cat || current == PlayerMark.Wrong) return MoveOutcome.NoOp;
+            if (current == PlayerMark.Character || current == PlayerMark.Wrong) return MoveOutcome.NoOp;
 
             if (on)
             {
@@ -126,7 +126,7 @@ namespace Cast.Game
             if (!_hints.TryGetHint(Board, out int row, out int col)) return false;
 
             _hintsRemaining--;
-            ApplyMark(row, col, PlayerMark.Cat, costHeart: false);
+            ApplyMark(row, col, PlayerMark.Character, costHeart: false);
             if (Board.IsSolved()) Finish(won: true);
             return true;
         }
@@ -221,7 +221,7 @@ namespace Cast.Game
             for (int i = 0; i < solution.Count; i++)
             {
                 CatPlacement p = solution[i];
-                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Cat)
+                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Character)
                     unrevealed.Add(p);
             }
 
@@ -262,7 +262,7 @@ namespace Cast.Game
             for (int i = 0; i < solution.Count; i++)
             {
                 CatPlacement p = solution[i];
-                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Cat)
+                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Character)
                     unrevealed.Add(p);
             }
 
@@ -275,7 +275,7 @@ namespace Cast.Game
             for (int i = 0; i < solution.Count; i++)
             {
                 CatPlacement p = solution[i];
-                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Cat) continue;
+                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Character) continue;
 
                 for (int dr = -1; dr <= 1; dr++)
                 {
@@ -294,7 +294,7 @@ namespace Cast.Game
             for (int i = 0; i < solution.Count; i++)
             {
                 CatPlacement p = solution[i];
-                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Cat) continue;
+                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Character) continue;
                 catRows.Add(p.Row);
                 catCols.Add(p.Col);
             }
@@ -308,7 +308,7 @@ namespace Cast.Game
                     if (!cell.IsFilled) continue;
                     if (cell.ColorIndex != hintColor) continue;
                     if (cell.HasCat) continue;
-                    if (Board.GetMark(r, c) == PlayerMark.Cat) continue;
+                    if (Board.GetMark(r, c) == PlayerMark.Character) continue;
                     if (catRows.Contains(r)) continue;
                     if (catCols.Contains(c)) continue;
                     if (excludedCells.Contains((r, c))) continue;

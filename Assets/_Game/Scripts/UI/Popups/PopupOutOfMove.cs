@@ -3,15 +3,15 @@ using UnityScreenNavigator.Runtime.Core.Modal;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Cast.Game
 {
-    public sealed class PopupLose : Modal
+    public sealed class PopupOutOfMove : Modal
     {
-        [SerializeField] private Text _titleLabel;
-        [SerializeField] private Text _messageLabel;
+        [SerializeField] private TextMeshProUGUI _titleLabel;
         [SerializeField] private Button _retryButton;
-        [SerializeField] private Button _homeButton;
+        [SerializeField] private Button _reviveButton;
 
         private UniTaskCompletionSource<LoseChoice> _choice;
 
@@ -20,17 +20,16 @@ namespace Cast.Game
             _choice = new UniTaskCompletionSource<LoseChoice>();
 
             if (_titleLabel != null) _titleLabel.text = "You Lose";
-            if (_messageLabel != null) _messageLabel.text = $"Moves: {result.Moves}";
 
             if (_retryButton != null)
             {
                 _retryButton.onClick.RemoveAllListeners();
                 _retryButton.onClick.AddListener(() => _choice.TrySetResult(LoseChoice.Retry));
             }
-            if (_homeButton != null)
+            if (_reviveButton != null)
             {
-                _homeButton.onClick.RemoveAllListeners();
-                _homeButton.onClick.AddListener(() => _choice.TrySetResult(LoseChoice.Home));
+                _reviveButton.onClick.RemoveAllListeners();
+                _reviveButton.onClick.AddListener(() => _choice.TrySetResult(LoseChoice.Revive));
             }
             return _choice.Task;
         }

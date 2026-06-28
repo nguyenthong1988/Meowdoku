@@ -15,8 +15,18 @@ MonoBehaviour:
   m_GroupName: UI
   m_GUID: ad851772fa5474ff98c22372e07633cf
   m_SerializeEntries:
+  - m_GUID: 0b15a2d02125b46dbaf084cdcce0a685
+    m_Address: PopupPause
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 30b05f1de3f0041ffab66199862af223
     m_Address: ViewSplashScreen
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a7dc26c55d6f74577aca6ce90f85a8fa
+    m_Address: PopupWin
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -25,8 +35,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ea4519889f34144e293cdfb0ec568c2a
-    m_Address: PopupGameOver
+  - m_GUID: b392d8bb1912d42668f75b9d1ff77bdd
+    m_Address: PopupSettings
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c056ac5e1fce2487b88dcb2acacdd8d3
+    m_Address: PopupIngameSettings
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c901ca622f4554182bf56b401b8186a7
+    m_Address: PopupBoosterHint
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ce7054789cb22413787483caf7fc5b07
+    m_Address: ViewHome
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eaa4fe2b38f4e495f871d1a89f993f16
+    m_Address: PopupOutOfMove
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

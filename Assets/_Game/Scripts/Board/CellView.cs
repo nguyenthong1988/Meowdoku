@@ -33,9 +33,12 @@ namespace Cast.Game
             SetMark(PlayerMark.None);
         }
 
+        public PlayerMark CurrentMark { get; private set; }
+
         public void SetMark(PlayerMark mark)
         {
-            if (_cat != null) _cat.enabled = mark == PlayerMark.Cat;
+            CurrentMark = mark;
+            if (_cat != null) _cat.enabled = mark == PlayerMark.Character;
             if (_markHint != null) _markHint.enabled = mark == PlayerMark.Hint;
             if (_markWrong != null) _markWrong.enabled = mark == PlayerMark.Wrong;
         }
@@ -92,6 +95,24 @@ namespace Cast.Game
                 if (Sprites == null || Sprites.Length == 0) return null;
                 return Sprites[Mathf.Clamp(index, 0, Sprites.Length - 1)];
             }
+        }
+
+        public void SetSortOrder(int order)
+        {
+            if (_background != null) _background.sortingOrder = order;
+            if (_cat != null) _cat.sortingOrder = order + 1;
+            if (_markHint != null) _markHint.sortingOrder = order + 1;
+            if (_markWrong != null) _markWrong.sortingOrder = order + 1;
+        }
+
+        public void SetSortingLayer(string layerName)
+        {
+            int sortingLayerID = SortingLayer.NameToID(layerName);
+
+            if (_background != null) _background.sortingLayerID = sortingLayerID;
+            if (_cat != null) _cat.sortingLayerID = sortingLayerID;
+            if (_markHint != null) _markHint.sortingLayerID = sortingLayerID;
+            if (_markWrong != null) _markWrong.sortingLayerID = sortingLayerID;
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Cast.Game
 
         private void OnCellChanged(CellChange change)
         {
-            if (change.From == PlayerMark.Cat || change.To == PlayerMark.Cat)
+            if (change.From == PlayerMark.Character || change.To == PlayerMark.Character)
                 Refresh();
         }
 

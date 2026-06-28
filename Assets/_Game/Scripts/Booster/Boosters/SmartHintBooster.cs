@@ -14,9 +14,9 @@ namespace Cast.Game
         public bool CanUse(IGameSession session) =>
             session != null && session.Phase == GamePhase.Playing;
 
-        public async UniTask<BoosterResult> UseAsync(BoosterController ctx, CancellationToken ct)
+        public async UniTask<BoosterResult> UseAsync(BoosterController controller, CancellationToken ct)
         {
-            List<(int row, int col)> cells = ctx.Session.GetHintCells();
+            List<(int row, int col)> cells = controller.Session.GetHintCells();
             await UniTask.CompletedTask;
 
             if (cells.Count == 0)

@@ -19,8 +19,7 @@ namespace Cast.Game
 
         [SerializeField] private float _padding = 0.5f;
         [SerializeField] private BoardRevealConfig _revealConfig = new BoardRevealConfig();
-
-        [SerializeField] private SpriteRendererSnap[] _spriteSnaps;
+        [SerializeField] private GameObject _overlayObject;
 
         private CellViewPool _pool;
         private IBoardRevealAnimation _reveal;
@@ -86,16 +85,20 @@ namespace Cast.Game
                     _grid[r, c] = cell;
                 }
             }
-
-            // foreach (var snap in _spriteSnaps)
-            // {
-            //     snap.Snap();
-            // }
         }
 
         private Transform CellParent => _cellRoot != null ? _cellRoot : transform;
 
         public void SetVisible(bool visible) => CellParent.gameObject.SetActive(visible);
+
+        public void SetOverlay(bool enabled) { if (_overlayObject != null) _overlayObject.SetActive(enabled); }
+
+        public void SetHintCellsSortingLayer(string layerName)
+        {
+            foreach (CellView cell in _cells)
+                if (cell.CurrentMark == PlayerMark.Hint)
+                    cell.SetSortingLayer(layerName);
+        }
 
         public void ClearBoard()
         {
@@ -131,7 +134,7 @@ namespace Cast.Game
             CellView cell = GetCell(change.Row, change.Col);
             if (cell == null) return;
             cell.SetMark(change.To);
-            if (change.To == PlayerMark.Cat) cell.PlayPlace();
+            if (change.To == PlayerMark.Character) cell.PlayPlace();
         }
 
         private void OnMoveRejected(MoveOutcome outcome, int row, int col)
@@ -139,7 +142,7 @@ namespace Cast.Game
             GetCell(row, col)?.PlayShake();
         }
 
-        private void Clear()
+        public void Clear()
         {
             _pool?.ReturnAll();
             _cells.Clear();

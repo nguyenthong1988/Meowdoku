@@ -19,6 +19,19 @@ namespace Cast.Game
             GameRuntime.Register<IUIManager>(_uiManager);
             GameRuntime.Register<IAssetManager>(new AssetManager());
             GameRuntime.Register<IProfileService>(new ProfileService());
+
+            var profile = GameRuntime.Get<IProfileService>();
+            if (profile != null)
+            {
+                if (profile.PlayedSession < 1)
+                {
+                    profile.SetBalance("Coin", 100);
+                    profile.SetBalance(BoosterType.Hint, 3);
+                    profile.SetBalance(BoosterType.Reveal, 3);
+                }
+                profile.IncrementPlayedSession();
+            }
+
             StartGameFlowAsync().Forget();
         }
 
@@ -42,7 +55,7 @@ namespace Cast.Game
             }
             else
             {
-                await _gameEntry.RunFlowAsync();
+                _gameEntry.RunFlowAsync().Forget();
             }
 
             await UniTask.NextFrame();

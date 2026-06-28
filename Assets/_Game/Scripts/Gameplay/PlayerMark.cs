@@ -5,7 +5,7 @@ namespace Cast.Game
     {
         None = 0,
         Hint = 1,
-        Cat = 2,
+        Character = 2,
         Wrong = 3,
     }
 }

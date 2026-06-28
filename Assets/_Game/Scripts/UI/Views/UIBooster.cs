@@ -73,7 +73,7 @@ namespace Cast.Game
 
             if (_icon != null)
             {
-                Color c = _icon.color;
+                Color c = _unlocked ? Color.white : Color.gray;
                 c.a = iconAlpha;
                 _icon.color = c;
             }

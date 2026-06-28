@@ -26,11 +26,12 @@ namespace Cast.Game
 
         public void Bind(IGameSession session)
         {
+            Unbind();
             _session = session;
             _reader.Bind(_board.Layout, _board.Camera);
             _reader.Gesture += OnGesture;
             _session.PhaseChanged += OnPhaseChanged;
-            SetMode(BoardInputMode.Locked); 
+            SetMode(BoardInputMode.Locked);
         }
 
         public void Unbind()
@@ -102,7 +103,7 @@ namespace Cast.Game
             if (_session == null) return;
 
             PlayerMark mark = _session.Board.GetMark(row, col);
-            if (mark == PlayerMark.Cat || mark == PlayerMark.Wrong) return;
+            if (mark == PlayerMark.Character || mark == PlayerMark.Wrong) return;
 
             if (!_paintModeSet)
             {

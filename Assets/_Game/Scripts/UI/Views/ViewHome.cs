@@ -28,7 +28,7 @@ namespace Cast.Game
             if (_playButton != null)
             {
                 _playButton.onClick.RemoveAllListeners();
-                _playButton.onClick.AddListener(() => 
+                _playButton.onClick.AddListener(() =>
                 {
                     _onPlayClicked?.Invoke();
                     _onPlayClicked = null;
@@ -38,10 +38,7 @@ namespace Cast.Game
             if (_settingsButton != null)
             {
                 _settingsButton.onClick.RemoveAllListeners();
-                _settingsButton.onClick.AddListener(() => 
-                {
-                    GameRuntime.Get<IUIManager>().PushPopup("PopupSettings");
-                });
+                _settingsButton.onClick.AddListener(OnSettingsButtonClicked);
             }
             Refresh();
         }
@@ -50,6 +47,20 @@ namespace Cast.Game
         {
             if (_profile == null) return;
             if (_levelLabel != null) _levelLabel.text = $"Level {_profile.ProgressLevel}";
+        }
+
+        private void OnSettingsButtonClicked()
+        {
+            var ui = GameRuntime.Get<IUIManager>();
+            ui.PushPopup<PopupSettings>(UIConst.PopupSettings, onLoad: (_, p) =>
+                p.Setup(
+                    onClose: () => ui.PopPopup(),
+                    onFeedback: OnButtonFeedBackClicked
+                ));
+        }
+
+        private void OnButtonFeedBackClicked()
+        {
         }
     }
 }

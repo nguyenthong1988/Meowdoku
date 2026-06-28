@@ -24,6 +24,7 @@ namespace Cast.Game
     public enum LoseChoice : byte
     {
         Retry = 0,
-        Home = 1,
+        Revive = 1,
+        Home = 2,
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityScreenNavigator.Runtime.Core.Page;
@@ -7,7 +8,8 @@ using UnityScreenNavigator.Runtime.Core.Page;
 public class ViewSplashScreen : Page
 {
     [SerializeField] private Image _slider;
-    [SerializeField] private TMPro.TextMeshProUGUI _loadingText;
+    [SerializeField] private TextMeshProUGUI _loadingText;
+    [SerializeField] private RectTransform _progressHandler;
 
     [SerializeField] private RectTransform _viewRect;
     private float _progress = 0;
@@ -18,12 +20,22 @@ public class ViewSplashScreen : Page
 
     private void UpdateUI()
     {
-        if (!ReferenceEquals(_slider, null))
+        if (_slider != null)
         {
             _slider.fillAmount = _progress;
+            UpdateProgressHandlerPosition();
         }
 
         UpdateLoadingText();
+    }
+
+    private void UpdateProgressHandlerPosition()
+    {
+        if (_progressHandler==null) return;
+        RectTransform sliderRect = _slider.rectTransform;
+        float fillEndX = sliderRect.rect.xMin + sliderRect.rect.width * _progress;
+        Vector3 worldPos = sliderRect.TransformPoint(new Vector3(fillEndX, 0f, 0f));
+        _progressHandler.position = new Vector3(worldPos.x, _progressHandler.position.y, _progressHandler.position.z);
     }
 
     public override async UniTask Initialize(Memory<object> args)
@@ -62,7 +74,7 @@ public class ViewSplashScreen : Page
         UpdateUI();
     }
 
-    public override void DidPopEnter(System.Memory<object> args)
+    public override void DidPopEnter(Memory<object> args)
     {
         if (_progress < _nextProgress)
         {

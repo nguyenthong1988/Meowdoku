@@ -12,7 +12,7 @@ namespace Cast.Game
             for (int i = 0; i < solution.Count; i++)
             {
                 CatPlacement c = solution[i];
-                if (state.GetMark(c.Row, c.Col) != PlayerMark.Cat)
+                if (state.GetMark(c.Row, c.Col) != PlayerMark.Character)
                 {
                     row = c.Row;
                     col = c.Col;

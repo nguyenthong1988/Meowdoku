@@ -26,8 +26,8 @@ namespace Cast.Game
             PlayerMark prev = _marks[row, col];
             if (prev == mark) return;
 
-            if (prev == PlayerMark.Cat) CatsRevealed--;
-            if (mark == PlayerMark.Cat) CatsRevealed++;
+            if (prev == PlayerMark.Character) CatsRevealed--;
+            if (mark == PlayerMark.Character) CatsRevealed++;
             _marks[row, col] = mark;
         }
 
@@ -41,7 +41,7 @@ namespace Cast.Game
             for (int i = 0; i < Level.Solution.Count; i++)
             {
                 CatPlacement c = Level.Solution[i];
-                if (_marks[c.Row, c.Col] != PlayerMark.Cat) return false;
+                if (_marks[c.Row, c.Col] != PlayerMark.Character) return false;
             }
             return true;
         }
