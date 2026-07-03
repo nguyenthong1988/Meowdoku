@@ -10,7 +10,7 @@ namespace Cast.Game
 
     public sealed class BoosterController : IBoosterController
     {
-        private readonly IBoardInput _gate;
+        private readonly IBoardInput _input;
         private readonly IBoosterInventory _inventory;
         private readonly Dictionary<BoosterType, IBooster> _boosters = new Dictionary<BoosterType, IBooster>();
 
@@ -22,11 +22,11 @@ namespace Cast.Game
         public event Action<BoosterType> BoosterStarted;
         public event Action<BoosterResult> BoosterFinished;
 
-        public BoosterController(IGameSession session, IBoardInput gate, IBoardTargeting targeting,
+        public BoosterController(IGameSession session, IBoardInput input, IBoardTargeting targeting,
                                  BoardView board, IBoosterInventory inventory, params IBooster[] boosters)
         {
             Session = session ?? throw new ArgumentNullException(nameof(session));
-            _gate = gate ?? throw new ArgumentNullException(nameof(gate));
+            _input = input ?? throw new ArgumentNullException(nameof(input));
             Targeting = targeting;
             Board = board;
             _inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));
@@ -49,7 +49,7 @@ namespace Cast.Game
 
             IsBusy = true;
             BoosterStarted?.Invoke(type);
-            _gate?.SetMode(BoardInputMode.Locked);
+            _input?.SetMode(BoardInputMode.Locked);
 
             BoosterResult result;
             try
@@ -60,7 +60,7 @@ namespace Cast.Game
             }
             finally
             {
-                _gate?.SetMode(BoardInputMode.Play);
+                _input?.SetMode(BoardInputMode.Play);
                 IsBusy = false;
             }
 

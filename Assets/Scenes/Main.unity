@@ -855,7 +855,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3750f63c4cd4490be91d1b013135085, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CaskFramework::CaskFramework.Audio.AudioManager
-  _soundSettings: {fileID: 0}
+  _soundSettings: {fileID: 11400000, guid: e9824cf5e26fa4cd492c965fd39ade41, type: 2}
   _audioLibrary: {fileID: 0}
   _essentialSfxs: []
   _preloadEssentialSfxs: 1

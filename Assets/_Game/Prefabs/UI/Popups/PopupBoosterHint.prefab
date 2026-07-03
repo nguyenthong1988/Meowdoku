@@ -338,6 +338,7 @@ MonoBehaviour:
     _enterAnimations: []
     _exitAnimations: []
   _dontDestroyOnClose: 0
+  _ignoreBackdrop: 1
   _confirmButton: {fileID: 3466068191746192997}
 --- !u!1 &4495014497137651220
 GameObject:

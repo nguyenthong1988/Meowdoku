@@ -104,25 +104,7 @@ namespace Cast.Game
 
         private async UniTaskVoid RunBoosterHintAsync()
         {
-            var ui = GameRuntime.Get<IUIManager>();
-
-            if (_boardView != null) _boardView.SetOverlay(true);
-            SetVisible(false);
-
             await UseBoosterAsync(BoosterType.Hint);
-            if (_boardView != null) _boardView.SetHintCellsSortingLayer("UI");
-
-            PopupBoosterHint popup = null;
-            await ui.PushPopupAsync<PopupBoosterHint>(UIConst.PopupBoosterHint, onLoad: (_, p) => popup = p);
-
-            if (popup != null)
-                await popup.WaitForConfirmAsync();
-
-            await ui.PopPopupAsync();
-
-            if (_boardView != null) _boardView.SetHintCellsSortingLayer("Gameplay");
-            if (_boardView != null) _boardView.SetOverlay(false);
-            SetVisible(true);
         }
 
         private void OnBoosterRevealClicked()

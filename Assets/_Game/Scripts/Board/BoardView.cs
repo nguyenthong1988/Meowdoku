@@ -93,7 +93,7 @@ namespace Cast.Game
 
         public void SetOverlay(bool enabled) { if (_overlayObject != null) _overlayObject.SetActive(enabled); }
 
-        public void SetHintCellsSortingLayer(string layerName)
+        public void SetCellsSortingLayer(string layerName)
         {
             foreach (CellView cell in _cells)
                 if (cell.CurrentMark == PlayerMark.Hint)
