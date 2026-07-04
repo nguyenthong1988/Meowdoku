@@ -1,15 +1,12 @@
 using System;
-using System.Threading;
-using Cysharp.Threading.Tasks;
 
 namespace Cast.Game
 {
-
     public interface IBoosterController
     {
         bool IsBusy { get; }
 
-        UniTask<BoosterResult> UseAsync(BoosterType type, CancellationToken ct = default);
+        void Use(BoosterType type, Action<BoosterResult> onDone = null);
 
         event Action<BoosterType> BoosterStarted;
         event Action<BoosterResult> BoosterFinished;

@@ -1,17 +1,17 @@
 
 
-using UnityScreenNavigator.Runtime.Core.Page;
+using CaskFramework.UI;
 using Cysharp.Threading.Tasks;
+using LitMotion;
+using LitMotion.Extensions;
+using UnityScreenNavigator.Runtime.Core.Page;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
-using CaskFramework.Core;
-using CaskFramework.UI;
 
 namespace Cast.Game
 {
-
     public sealed class ViewGameplay : Page
     {
         [Header("Hearts / labels")]
@@ -26,16 +26,49 @@ namespace Cast.Game
         [Header("Other UI elements")]
         [SerializeField] private Button _homeButton;
         [SerializeField] private Button _settingsButton;
+        [SerializeField] private RectTransform _topContentContainer;
+        [SerializeField] private RectTransform _midContentContainer;
+        [SerializeField] private RectTransform _botContentContainer;
 
         private IGameSession _session;
         private IBoosterController _boosters;
         private BoardView _boardView;
+        private IBoardInput _boardInput;
+        private IUIManager _ui;
         private Action _onHomeRequested;
         private Action _onRetryRequested;
+        private Action _onEntryPositioned;
+        private CanvasGroup _midContentCanvasGroup;
 
-        public void Bind(IGameSession session, IBoosterController boosters, BoardView boardView, Action onHomeRequested = null, Action onRetryRequested = null)
+        private void Awake()
+        {
+            if (_topContentContainer != null)
+            {
+                var pos = _topContentContainer.anchoredPosition;
+                pos.y = 100f;
+                _topContentContainer.anchoredPosition = pos;
+            }
+
+            if (_midContentContainer != null)
+            {
+                _midContentCanvasGroup = _midContentContainer.GetComponent<CanvasGroup>();
+                if (_midContentCanvasGroup != null)
+                    _midContentCanvasGroup.alpha = 0f;
+            }
+
+            if (_botContentContainer != null)
+            {
+                var pos = _botContentContainer.anchoredPosition;
+                pos.y = -100f;
+                _botContentContainer.anchoredPosition = pos;
+            }
+        }
+
+        public void Bind(IGameSession session, IBoosterController boosters, BoardView boardView, IBoardInput boardInput, IUIManager ui, Action onHomeRequested = null, Action onRetryRequested = null, Action onEntryPositioned = null)
         {
             _boardView = boardView;
+            _boardInput = boardInput;
+            _ui = ui;
             if (_session != null)
                 _session.PhaseChanged -= OnPhaseChanged;
 
@@ -43,6 +76,7 @@ namespace Cast.Game
             _boosters = boosters;
             _onHomeRequested = onHomeRequested;
             _onRetryRequested = onRetryRequested;
+            _onEntryPositioned = onEntryPositioned;
 
             _session.PhaseChanged += OnPhaseChanged;
 
@@ -76,10 +110,14 @@ namespace Cast.Game
             }
 
             RefreshLevelLabel();
+
+            PlayAppearAnimation().Forget();
         }
 
-        private UniTask UseBoosterAsync(BoosterType type) =>
-            _boosters != null ? _boosters.UseAsync(type) : UniTask.CompletedTask;
+        private void UseBooster(BoosterType type)
+        {
+            _boosters?.Use(type);
+        }
 
         private void OnPhaseChanged(GamePhase phase)
         {
@@ -92,6 +130,29 @@ namespace Cast.Game
                 _levelLabel.text = $"Level {_session.Level.Id}";
         }
 
+        private async UniTask PlayAppearAnimation()
+        {
+            const float duration = 0.25f;
+
+            var topMotion = LMotion.Create(_topContentContainer.anchoredPosition, new Vector2(_topContentContainer.anchoredPosition.x, -100f), duration)
+                .BindToAnchoredPosition(_topContentContainer);
+
+            var botMotion = LMotion.Create(_botContentContainer.anchoredPosition, new Vector2(_botContentContainer.anchoredPosition.x, 500f), duration)
+                .BindToAnchoredPosition(_botContentContainer);
+
+            await UniTask.WhenAll(topMotion.ToUniTask(), botMotion.ToUniTask());
+
+            _boardInput?.SetMode(BoardInputMode.Play);
+            _onEntryPositioned?.Invoke();
+
+            if (_midContentCanvasGroup != null)
+            {
+                await LMotion.Create(0.85f, 1f, duration)
+                    .Bind(_midContentCanvasGroup, (a, g) => g.alpha = a)
+                    .ToUniTask();
+            }
+        }
+
         private void OnDestroy()
         {
             if (_session != null)
@@ -100,31 +161,38 @@ namespace Cast.Game
             }
         }
 
-        private void OnBoosterHintClicked() => RunBoosterHintAsync().Forget();
+        private void OnBoosterHintClicked() => UseBooster(BoosterType.Hint);
 
-        private async UniTaskVoid RunBoosterHintAsync()
-        {
-            await UseBoosterAsync(BoosterType.Hint);
-        }
-
-        private void OnBoosterRevealClicked()
-        {
-            UseBoosterAsync(BoosterType.Reveal).Forget();
-        }
+        private void OnBoosterRevealClicked() => UseBooster(BoosterType.Reveal);
 
         private void OnSettingsButtonClicked()
         {
-            var ui = GameRuntime.Get<IUIManager>();
-            ui.PushPopup<PopupSettings>(UIConst.PopupIngameSettings, onLoad: (_, p) =>
-                p.Setup(
-                    onClose: () => ui.PopPopup(),
-                    onRetry: OnButtonRetryClicked
-                ));
+            if (_ui == null) return;
+            OpenSettingsAsync().Forget();
+        }
+
+        private async UniTaskVoid OpenSettingsAsync()
+        {
+            PopupSettings popup = null;
+            await _ui.PushPopupAsync<PopupSettings>(UIConst.PopupIngameSettings, onLoad: (_, p) => popup = p);
+            popup?.Setup(
+                onClose: () => _ui.PopPopupAsync().Forget(),
+                onRetry: OnButtonRetryClicked);
         }
 
         private void OnButtonRetryClicked()
         {
-            GameRuntime.Get<IUIManager>().PopPopup();
+            if (_ui == null)
+            {
+                _onRetryRequested?.Invoke();
+                return;
+            }
+            CloseSettingsThenRetryAsync().Forget();
+        }
+
+        private async UniTaskVoid CloseSettingsThenRetryAsync()
+        {
+            await _ui.PopPopupAsync();
             _onRetryRequested?.Invoke();
         }
 

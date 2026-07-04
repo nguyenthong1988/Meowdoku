@@ -647,8 +647,16 @@ MonoBehaviour:
   _identifier: 
   _renderingOrder: 0
   _animationContainer:
-    _pushEnterAnimations: []
-    _pushExitAnimations: []
+    _pushEnterAnimations:
+    - _partnerPageIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: 0e0aa399514f648ff96f6da7f057a971, type: 2}
+    _pushExitAnimations:
+    - _partnerPageIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: 2dfc270ff15da43e299e37153fd1abc8, type: 2}
     _popEnterAnimations: []
     _popExitAnimations: []
   _dontDestroyOnClose: 0
@@ -659,6 +667,9 @@ MonoBehaviour:
   _boosterReveal: {fileID: 5712390480622294560}
   _homeButton: {fileID: 1095714977579324978}
   _settingsButton: {fileID: 3950014113423563694}
+  _topContentContainer: {fileID: 8195384227524252081}
+  _midContentContainer: {fileID: 1812081322349954797}
+  _botContentContainer: {fileID: 7073424033577845986}
 --- !u!1 &3648648994868379675
 GameObject:
   m_ObjectHideFlags: 0
@@ -919,7 +930,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  sfxName: UI_Button_Click
+  sfxName: SFX_ButtonClick
   hasHaptic: 1
   hapticType: 4
   clickAnimation: 1
@@ -1049,7 +1060,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  sfxName: UI_Button_Click
+  sfxName: SFX_ButtonClick
   hasHaptic: 1
   hapticType: 4
   clickAnimation: 1
@@ -1234,8 +1245,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1812081322349954797}
+  - component: {fileID: 8114265585245329688}
   m_Layer: 5
-  m_Name: MiddelContent
+  m_Name: MiddleContent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1263,6 +1275,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -350}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &8114265585245329688
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6375344496141093186}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &6384814190080275011
 GameObject:
   m_ObjectHideFlags: 0
@@ -1435,8 +1459,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -50}
-  m_SizeDelta: {x: 0, y: 100}
+  m_AnchoredPosition: {x: 0, y: -100}
+  m_SizeDelta: {x: 0, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &6434607704028197505
 GameObject:
@@ -2239,6 +2263,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7004516614722551925, guid: a4479ee6ce6914e1c856942888ebb28a, type: 3}
+      propertyPath: sfxName
+      value: SFX_ButtonClick
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2359,6 +2387,10 @@ PrefabInstance:
     - target: {fileID: 6762779431897542013, guid: a4479ee6ce6914e1c856942888ebb28a, type: 3}
       propertyPath: _type
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7004516614722551925, guid: a4479ee6ce6914e1c856942888ebb28a, type: 3}
+      propertyPath: sfxName
+      value: SFX_ButtonClick
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

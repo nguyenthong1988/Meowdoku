@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6209557506801979381}
   - component: {fileID: 6651739320638285079}
   m_Layer: 6
-  m_Name: Cat
+  m_Name: Character
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27,7 +27,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.25, y: 0.25, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2217602021419540546}
@@ -81,7 +81,7 @@ SpriteRenderer:
   m_SortingLayer: 2
   m_SortingOrder: 10
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 0fc1c74f16405401db0932d6815d5144, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 8ac236abef3b34dfb91f37a64903c702, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -141,7 +141,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Cast.Game.Board.CellView
   _background: {fileID: 5749943704954662840}
-  _cat: {fileID: 6651739320638285079}
+  _character: {fileID: 6651739320638285079}
   _markHint: {fileID: 1496696097673971133}
   _markWrong: {fileID: 6119694503510669056}
   _spriteAsset:
@@ -156,6 +156,7 @@ MonoBehaviour:
     - {fileID: 21300000, guid: f77c1cdb7ed38447ca014e883376a141, type: 3}
     - {fileID: 21300000, guid: a7e87c96d6ec44370a28f19c4d9a3071, type: 3}
     - {fileID: 21300000, guid: 62225c451aa5e4b7098084d66323a5f1, type: 3}
+  _ghostAlpha: 0.45
 --- !u!114 &6940879581909258904
 MonoBehaviour:
   m_ObjectHideFlags: 0

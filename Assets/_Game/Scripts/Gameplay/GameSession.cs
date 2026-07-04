@@ -10,21 +10,19 @@ namespace Cast.Game
 {
     public sealed class GameSession : IGameSession
     {
-        private readonly IHintProvider _hints;
         private readonly GameSessionConfig _config;
         private IProfileService _profile;
         private readonly Stack<MoveRecord> _undo = new Stack<MoveRecord>();
+        private readonly HashSet<sbyte> _hintedColors = new HashSet<sbyte>();
 
-        private UniTaskCompletionSource<GameResult> _endSource;
         private GamePhase _phase = GamePhase.Loading;
         private int _hearts;
         private int _hintsRemaining;
         private int _moves;
         private float _startTime;
 
-        public GameSession(IHintProvider hints, GameSessionConfig config, IProfileService profile)
+        public GameSession(GameSessionConfig config, IProfileService profile)
         {
-            _hints = hints ?? throw new ArgumentNullException(nameof(hints));
             _config = config ?? new GameSessionConfig();
             _profile = profile ?? throw new ArgumentNullException(nameof(profile));
         }
@@ -40,6 +38,7 @@ namespace Cast.Game
         public event Action<CellChange> CellChanged;
         public event Action<int> HeartsChanged;
         public event Action<MoveOutcome, int, int> MoveRejected;
+        public event Action<GameResult> Ended;
 
         public void Setup(LevelData level)
         {
@@ -49,19 +48,14 @@ namespace Cast.Game
             _hearts = _config.HeartsMax;
             _hintsRemaining = _config.HintsMax;
             _moves = 0;
-            _endSource = new UniTaskCompletionSource<GameResult>();
             SetPhase(GamePhase.Loading);
         }
 
         public void Begin()
         {
+            _hintedColors.Clear();
             _startTime = UnityEngine.Time.realtimeSinceStartup;
             SetPhase(GamePhase.Playing);
-        }
-
-        public UniTask<GameResult> PlayToEndAsync(CancellationToken ct = default)
-        {
-            return _endSource.Task;
         }
 
         public MoveOutcome Reveal(int row, int col)
@@ -120,17 +114,6 @@ namespace Cast.Game
             return true;
         }
 
-        public bool Hint()
-        {
-            if (_phase != GamePhase.Playing || _hintsRemaining <= 0) return false;
-            if (!_hints.TryGetHint(Board, out int row, out int col)) return false;
-
-            _hintsRemaining--;
-            ApplyMark(row, col, PlayerMark.Character, costHeart: false);
-            if (Board.IsSolved()) Finish(won: true);
-            return true;
-        }
-
         public void Restart()
         {
             if (Board == null || _phase != GamePhase.Playing) return;
@@ -151,11 +134,11 @@ namespace Cast.Game
 
         public void Dispose()
         {
-            _endSource?.TrySetCanceled();
             PhaseChanged = null;
             CellChanged = null;
             HeartsChanged = null;
             MoveRejected = null;
+            Ended = null;
         }
 
         private void ApplyMark(int row, int col, PlayerMark mark, bool costHeart)
@@ -251,72 +234,12 @@ namespace Cast.Game
             return cleared;
         }
 
-        public List<(int row, int col)> GetHintCells()
+        public HintResult GetHint()
         {
-            var result = new List<(int, int)>();
-            if (_phase != GamePhase.Playing) return result;
+            if (_phase != GamePhase.Playing) return null;
 
-            IReadOnlyList<CatPlacement> solution = Level.Solution;
-
-            var unrevealed = new List<CatPlacement>();
-            for (int i = 0; i < solution.Count; i++)
-            {
-                CatPlacement p = solution[i];
-                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Character)
-                    unrevealed.Add(p);
-            }
-
-            if (unrevealed.Count <= 3) return result;
-
-            CatPlacement target = unrevealed[UnityEngine.Random.Range(0, unrevealed.Count)];
-            sbyte hintColor = target.ColorIndex;
-
-            var excludedCells = new HashSet<(int, int)>();
-            for (int i = 0; i < solution.Count; i++)
-            {
-                CatPlacement p = solution[i];
-                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Character) continue;
-
-                for (int dr = -1; dr <= 1; dr++)
-                {
-                    for (int dc = -1; dc <= 1; dc++)
-                    {
-                        int nr = p.Row + dr;
-                        int nc = p.Col + dc;
-                        if (Board.InBounds(nr, nc))
-                            excludedCells.Add((nr, nc));
-                    }
-                }
-            }
-
-            var catRows = new HashSet<int>();
-            var catCols = new HashSet<int>();
-            for (int i = 0; i < solution.Count; i++)
-            {
-                CatPlacement p = solution[i];
-                if (Board.GetMark(p.Row, p.Col) != PlayerMark.Character) continue;
-                catRows.Add(p.Row);
-                catCols.Add(p.Col);
-            }
-
-            int size = Board.Size;
-            for (int r = 0; r < size; r++)
-            {
-                for (int c = 0; c < size; c++)
-                {
-                    CellData cell = Level.GetCell(r, c);
-                    if (!cell.IsFilled) continue;
-                    if (cell.ColorIndex != hintColor) continue;
-                    if (cell.HasCat) continue;
-                    if (Board.GetMark(r, c) == PlayerMark.Character) continue;
-                    if (catRows.Contains(r)) continue;
-                    if (catCols.Contains(c)) continue;
-                    if (excludedCells.Contains((r, c))) continue;
-
-                    result.Add((r, c));
-                }
-            }
-
+            HintResult result = HintCalculator.Calculate(Board, _hintedColors);
+            if (result != null) _hintedColors.Add(result.ColorIndex);
             return result;
         }
 
@@ -345,7 +268,7 @@ namespace Cast.Game
             SetPhase(GamePhase.Result);
             float elapsed = UnityEngine.Time.realtimeSinceStartup - _startTime;
             int hintsUsed = _config.HintsMax - _hintsRemaining;
-            _endSource?.TrySetResult(new GameResult(won, _hearts, hintsUsed, elapsed, _moves));
+            Ended?.Invoke(new GameResult(won, _hearts, hintsUsed, elapsed, _moves));
         }
     }
 }

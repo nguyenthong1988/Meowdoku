@@ -51,9 +51,11 @@ SpriteAtlas:
     - da30de28b599949adb4708e0ef1266fe: 21300000
     - 45edd5783ce8247e2887bcf49b95b80e: 21300000
     - 29c7401a8b04f460786092a75e4af720: 21300000
+    - 8ac236abef3b34dfb91f37a64903c702: 21300000
     - ef2278cb5ecae4ab9817e1efda6d8fec: 21300000
     - f77c1cdb7ed38447ca014e883376a141: 21300000
     - 73cbca8cad26e4276b02e796506120c8: 21300000
+    - 4012d89c6c45e4d5ca25ee4ec988afd7: 21300000
     - 5b43eefd9494948498cdac3326e75463: 21300000
     - 12925e2e734c4409492e17d142b8e3ed: 21300000
     - bff21f5e414f94cb9ad157069dc850df: 21300000
@@ -75,9 +77,11 @@ SpriteAtlas:
   - {fileID: 21300000, guid: da30de28b599949adb4708e0ef1266fe, type: 3}
   - {fileID: 21300000, guid: 45edd5783ce8247e2887bcf49b95b80e, type: 3}
   - {fileID: 21300000, guid: 29c7401a8b04f460786092a75e4af720, type: 3}
+  - {fileID: 21300000, guid: 8ac236abef3b34dfb91f37a64903c702, type: 3}
   - {fileID: 21300000, guid: ef2278cb5ecae4ab9817e1efda6d8fec, type: 3}
   - {fileID: 21300000, guid: f77c1cdb7ed38447ca014e883376a141, type: 3}
   - {fileID: 21300000, guid: 73cbca8cad26e4276b02e796506120c8, type: 3}
+  - {fileID: 21300000, guid: 4012d89c6c45e4d5ca25ee4ec988afd7, type: 3}
   - {fileID: 21300000, guid: 5b43eefd9494948498cdac3326e75463, type: 3}
   - {fileID: 21300000, guid: 12925e2e734c4409492e17d142b8e3ed, type: 3}
   - {fileID: 21300000, guid: bff21f5e414f94cb9ad157069dc850df, type: 3}
@@ -90,7 +94,7 @@ SpriteAtlas:
   - lotus4
   - booster-icon-frog
   - lotus10
-  - LotusPool
+  - lotus_pool
   - booster-icon-hint
   - lotus9
   - lotus7
@@ -98,9 +102,11 @@ SpriteAtlas:
   - booster-icon-undo
   - icon-red
   - mark_wrong
+  - frog_character
   - lotus5
   - lotus8
   - lotus2
+  - background
   - pixel
   - heart
   - lotus6

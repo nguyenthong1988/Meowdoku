@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
@@ -15,6 +16,10 @@ namespace Cast.Game
 
         private bool _paintModeSet;
         private bool _paintHint;
+
+        private readonly HashSet<(int, int)> _hintPreviewCells = new HashSet<(int, int)>();
+        private Action<int, int> _hintPreviewTap;
+        private Action<int, int> _hintPreviewDoubleTap;
 
         public BoardInputMode Mode { get; private set; } = BoardInputMode.Locked;
 
@@ -41,12 +46,35 @@ namespace Cast.Game
             _session = null;
             _targetSource?.TrySetResult((false, -1, -1));
             _targetSource = null;
+            _hintPreviewCells.Clear();
+            _hintPreviewTap = null;
+            _hintPreviewDoubleTap = null;
         }
 
         public void SetMode(BoardInputMode mode)
         {
             Mode = mode;
             _reader.SetEnabled(mode != BoardInputMode.Locked);
+        }
+
+        public void BeginHintPreview(IReadOnlyCollection<(int Row, int Col)> allowedCells, Action<int, int> onTap, Action<int, int> onDoubleTap)
+        {
+            _hintPreviewCells.Clear();
+            if (allowedCells != null)
+                foreach (var cell in allowedCells)
+                    _hintPreviewCells.Add((cell.Row, cell.Col));
+            _hintPreviewTap = onTap;
+            _hintPreviewDoubleTap = onDoubleTap;
+            SetMode(BoardInputMode.HintPreview);
+        }
+
+        public void EndHintPreview()
+        {
+            _hintPreviewCells.Clear();
+            _hintPreviewTap = null;
+            _hintPreviewDoubleTap = null;
+            if (Mode == BoardInputMode.HintPreview)
+                SetMode(_session != null && _session.Phase == GamePhase.Playing ? BoardInputMode.Play : BoardInputMode.Locked);
         }
 
         public UniTask<(bool ok, int row, int col)> PickCellAsync(CancellationToken ct = default)
@@ -59,8 +87,9 @@ namespace Cast.Game
 
         private void OnPhaseChanged(GamePhase phase)
         {
-            
+
             if (Mode == BoardInputMode.Targeting) return;
+            if (Mode == BoardInputMode.HintPreview) return;
             SetMode(phase == GamePhase.Playing ? BoardInputMode.Play : BoardInputMode.Locked);
         }
 
@@ -77,6 +106,15 @@ namespace Cast.Game
                         _targetSource?.TrySetResult((true, g.Row, g.Col));
                         _targetSource = null;
                         SetMode(BoardInputMode.Play);
+                    }
+                    return;
+
+                case BoardInputMode.HintPreview:
+                    if (!_hintPreviewCells.Contains((g.Row, g.Col))) return;
+                    switch (g.Gesture)
+                    {
+                        case PointerGesture.DoubleTap: _hintPreviewDoubleTap?.Invoke(g.Row, g.Col); break;
+                        case PointerGesture.Tap: _hintPreviewTap?.Invoke(g.Row, g.Col); break;
                     }
                     return;
 

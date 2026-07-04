@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using CaskFramework.Haptic;
+using CaskFramework.Core;
+using CaskFramework.Audio;
 
 public class UIButton : Button
 {
@@ -125,5 +127,9 @@ public class UIButton : Button
         // SoundHelper.Instance.PlaySfx(sfxName);
         // if (hasHaptic)
         //     SoundHelper.Instance.TriggerHaptic(hapticType);
+        if (!string.IsNullOrEmpty(sfxName))
+        {
+            GameRuntime.Get<IAudioManager>().PlaySfx(sfxName);
+        }
     }
 }

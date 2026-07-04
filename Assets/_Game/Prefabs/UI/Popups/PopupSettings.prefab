@@ -311,9 +311,18 @@ MonoBehaviour:
   _usePrefabNameAsIdentifier: 1
   _identifier: 
   _animationContainer:
-    _enterAnimations: []
-    _exitAnimations: []
+    _enterAnimations:
+    - _partnerModalIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: 3ad9c238320f34ce4888532a6127399a, type: 2}
+    _exitAnimations:
+    - _partnerModalIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: aea14e1af2e6d47ceaa7e507e75890b2, type: 2}
   _dontDestroyOnClose: 0
+  _ignoreBackdrop: 0
   _musicToggle: {fileID: 5559926601970209043}
   _sfxToggle: {fileID: 488344306787950420}
   _vibrationToggle: {fileID: 490250806352051673}
@@ -593,7 +602,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  sfxName: UI_Button_Click
+  sfxName: SFX_ButtonCancelClick
   hasHaptic: 1
   hapticType: 4
   clickAnimation: 1
@@ -724,7 +733,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  sfxName: UI_Button_Click
+  sfxName: SFX_ButtonClick
   hasHaptic: 1
   hapticType: 4
   clickAnimation: 1
@@ -1617,7 +1626,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Music
+  m_text: 'Vibration
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 58a6ae8d8d1fd41c58c928517490cbba, type: 2}
   m_sharedMaterial: {fileID: -1150838957045619183, guid: 58a6ae8d8d1fd41c58c928517490cbba, type: 2}
@@ -1931,7 +1942,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Music
+  m_text: Sound
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 58a6ae8d8d1fd41c58c928517490cbba, type: 2}
   m_sharedMaterial: {fileID: -1150838957045619183, guid: 58a6ae8d8d1fd41c58c928517490cbba, type: 2}

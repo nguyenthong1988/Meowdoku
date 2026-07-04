@@ -947,10 +947,26 @@ MonoBehaviour:
   _identifier: 
   _renderingOrder: 0
   _animationContainer:
-    _pushEnterAnimations: []
-    _pushExitAnimations: []
-    _popEnterAnimations: []
-    _popExitAnimations: []
+    _pushEnterAnimations:
+    - _partnerPageIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: f5d8a706dd23d488d873afb5a062f378, type: 2}
+    _pushExitAnimations:
+    - _partnerPageIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: da8a6f70f194d457dbda218f419e1df9, type: 2}
+    _popEnterAnimations:
+    - _partnerPageIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: f5d8a706dd23d488d873afb5a062f378, type: 2}
+    _popExitAnimations:
+    - _partnerPageIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: da8a6f70f194d457dbda218f419e1df9, type: 2}
   _dontDestroyOnClose: 0
   _slider: {fileID: 5026338172450160721}
   _loadingText: {fileID: 1294736871589852}

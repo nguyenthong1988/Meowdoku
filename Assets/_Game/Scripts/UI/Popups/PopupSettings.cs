@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
+using CaskFramework.Core;
 
 namespace Cast.Game
 {
@@ -26,6 +27,7 @@ namespace Cast.Game
 
         public override UniTask Initialize(Memory<object> args)
         {
+            _audio = GameRuntime.Get<IAudioManager>();
             if (_musicToggle != null)
             {
                 _musicToggle.onValueChanged.RemoveAllListeners();

@@ -1,11 +1,5 @@
 namespace Cast.Game
 {
-    public enum HomeChoice : byte
-    {
-        Play = 0,
-        Settings = 1,
-    }
-
     public enum PauseChoice : byte
     {
         Resume = 0,

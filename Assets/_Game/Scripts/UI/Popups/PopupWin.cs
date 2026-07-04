@@ -1,21 +1,21 @@
 
-using UnityScreenNavigator.Runtime.Core.Modal;
 using Cysharp.Threading.Tasks;
 using LitMotion;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
+using CaskFramework.Audio;
+using CaskFramework.Core;
 
 namespace Cast.Game
 {
-    public sealed class PopupWin : Modal
+    public sealed class PopupWin : ChoicePopup<WinChoice>
     {
         [SerializeField] private TextMeshProUGUI _kudoText;
         [SerializeField] private TextMeshProUGUI _levelText;
         [SerializeField] private Button _nextButton;
 
-        private UniTaskCompletionSource<WinChoice> _choice;
         private CanvasGroup _kudoCanvasGroup, _nextButtonCanvasGroup;
         private readonly string[] _kudoTexts = new string[] { "Good!", "Great!", "Awesome!", "Perfect!", "Excellent!" };
 
@@ -29,22 +29,20 @@ namespace Cast.Game
             return base.Initialize(args);
         }
 
-        public UniTask<WinChoice> WaitForChoiceAsync(GameResult result, int currentLevelId)
+        public void Setup(GameResult result, int currentLevelId)
         {
             _levelText.text = $"LEVEL {currentLevelId + 1}";
 
-            _choice = new UniTaskCompletionSource<WinChoice>();
-
             _nextButton.onClick.RemoveAllListeners();
-            _nextButton.onClick.AddListener(() => _choice.TrySetResult(WinChoice.Next));
+            _nextButton.onClick.AddListener(() => Choose(WinChoice.Next));
 
             RunKudoAnimationAsync().Forget();
-
-            return _choice.Task;
         }
 
         private async UniTaskVoid RunKudoAnimationAsync()
         {
+            GameRuntime.Get<IAudioManager>().PlaySfx(AudioNames.SFX_WINNING);
+
             float kudoTextDuration = 0.25f;
             _kudoText.text = _kudoTexts[UnityEngine.Random.Range(0, _kudoTexts.Length)];
             _kudoText.transform.localScale = Vector3.one * 1.5f;
@@ -58,11 +56,14 @@ namespace Cast.Game
 
             await UniTask.WhenAll(scaleMotion.ToUniTask(), alphaMotion.ToUniTask());
 
+            if (VFXManager.Instance != null)
+                VFXManager.Instance.PlayWinConfetti();
+
             await UniTask.Delay(TimeSpan.FromSeconds(1f));
 
-            _nextButton.transform.localScale = Vector3.one * 0.35f;
+            _nextButton.transform.localScale = Vector3.one * 0.65f;
 
-            var btnScaleMotion = LMotion.Create(Vector3.one * 0.35f, Vector3.one, 0.25f)
+            var btnScaleMotion = LMotion.Create(Vector3.one * 0.65f, Vector3.one, 0.25f)
                 .Bind(_nextButton.transform, (s, t) => t.localScale = s);
 
             var btnAlphaMotion = LMotion.Create(0.35f, 1f, 0.25f)
@@ -72,7 +73,5 @@ namespace Cast.Game
 
             _nextButtonCanvasGroup.interactable = true;
         }
-
-        private void OnDestroy() => _choice?.TrySetResult(WinChoice.Next);
     }
 }

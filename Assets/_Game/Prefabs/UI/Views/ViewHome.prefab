@@ -208,7 +208,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  sfxName: UI_Button_Click
+  sfxName: SFX_ButtonClick
   hasHaptic: 1
   hapticType: 4
   clickAnimation: 1
@@ -442,6 +442,7 @@ GameObject:
   - component: {fileID: 2899986539188986543}
   - component: {fileID: 2856349041340871733}
   - component: {fileID: 5559364635085343272}
+  - component: {fileID: 613170596993181314}
   m_Layer: 5
   m_Name: PlayButton
   m_TagString: Untagged
@@ -551,7 +552,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  sfxName: UI_Button_Click
+  sfxName: SFX_ButtonClick
   hasHaptic: 1
   hapticType: 4
   clickAnimation: 1
@@ -561,6 +562,18 @@ MonoBehaviour:
   pressDownEase: 5
   pressUpEase: 5
   targetTransform: {fileID: 4637814801319807939}
+--- !u!225 &613170596993181314
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7211191633842730232}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &8316647982577933176
 GameObject:
   m_ObjectHideFlags: 0
@@ -617,8 +630,16 @@ MonoBehaviour:
   _identifier: 
   _renderingOrder: 0
   _animationContainer:
-    _pushEnterAnimations: []
-    _pushExitAnimations: []
+    _pushEnterAnimations:
+    - _partnerPageIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: 0e0aa399514f648ff96f6da7f057a971, type: 2}
+    _pushExitAnimations:
+    - _partnerPageIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: 2dfc270ff15da43e299e37153fd1abc8, type: 2}
     _popEnterAnimations: []
     _popExitAnimations: []
   _dontDestroyOnClose: 0

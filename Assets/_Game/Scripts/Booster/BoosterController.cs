@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-
-
-using Cysharp.Threading.Tasks;
+using CaskFramework.UI;
 
 namespace Cast.Game
 {
-
     public sealed class BoosterController : IBoosterController
     {
         private readonly IBoardInput _input;
@@ -17,55 +13,72 @@ namespace Cast.Game
         public IGameSession Session { get; }
         public BoardView Board { get; }
         public IBoardTargeting Targeting { get; }
+        public IBoardInput Input => _input;
+        public IUIManager Ui { get; }
         public bool IsBusy { get; private set; }
 
         public event Action<BoosterType> BoosterStarted;
         public event Action<BoosterResult> BoosterFinished;
 
         public BoosterController(IGameSession session, IBoardInput input, IBoardTargeting targeting,
-                                 BoardView board, IBoosterInventory inventory, params IBooster[] boosters)
+                                 BoardView board, IBoosterInventory inventory, IUIManager ui, params IBooster[] boosters)
         {
             Session = session ?? throw new ArgumentNullException(nameof(session));
             _input = input ?? throw new ArgumentNullException(nameof(input));
             Targeting = targeting;
             Board = board;
             _inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));
+            Ui = ui ?? throw new ArgumentNullException(nameof(ui));
 
             if (boosters != null)
                 foreach (IBooster b in boosters)
                     if (b != null) _boosters[b.Type] = b;
         }
 
-        public async UniTask<BoosterResult> UseAsync(BoosterType type, CancellationToken ct = default)
+        public void Use(BoosterType type, Action<BoosterResult> onDone = null)
         {
             if (IsBusy)
-                return BoosterResult.Rejected(type, "busy");
+            {
+                onDone?.Invoke(BoosterResult.Rejected(type, "busy"));
+                return;
+            }
 
             if (!_boosters.TryGetValue(type, out IBooster booster))
-                return BoosterResult.Rejected(type, "not registered");
-
-            // if (_inventory.Count(type) <= 0 || !booster.CanUse(Session))
-            //     return BoosterResult.Rejected(type, "unavailable");
+            {
+                onDone?.Invoke(BoosterResult.Rejected(type, "not registered"));
+                return;
+            }
 
             IsBusy = true;
             BoosterStarted?.Invoke(type);
             _input?.SetMode(BoardInputMode.Locked);
 
-            BoosterResult result;
-            try
+            bool completed = false;
+
+            void Complete(BoosterResult result)
             {
-                result = await booster.UseAsync(this, ct);
+                if (completed) return;
+                completed = true;
+
                 if (result.Applied)
                     _inventory.TrySpend(type);
-            }
-            finally
-            {
+
                 _input?.SetMode(BoardInputMode.Play);
                 IsBusy = false;
+
+                BoosterFinished?.Invoke(result);
+                onDone?.Invoke(result);
             }
 
-            BoosterFinished?.Invoke(result);
-            return result;
+            try
+            {
+                booster.Execute(this, Complete);
+            }
+            catch (Exception)
+            {
+                Complete(BoosterResult.Rejected(type, "error"));
+                throw;
+            }
         }
     }
 }

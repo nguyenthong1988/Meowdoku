@@ -5,7 +5,8 @@ namespace Cast.Game
         public const string ViewSplashScreen = "ViewSplashScreen";
         public const string ViewHome = "ViewHome";
         public const string ViewGameplay = "ViewGameplay";
-        
+        public const string ViewResult = "ViewResult";
+
         public const string PopupWin = "PopupWin";
         public const string PopupOutOfMove = "PopupOutOfMove";
         public const string PopupSettings = "PopupSettings";

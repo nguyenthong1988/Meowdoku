@@ -1,5 +1,4 @@
-using System.Threading;
-using Cysharp.Threading.Tasks;
+using System;
 
 namespace Cast.Game
 {
@@ -11,11 +10,10 @@ namespace Cast.Game
         public bool CanUse(IGameSession session) =>
             session != null && session.Phase == GamePhase.Playing;
 
-        public UniTask<BoosterResult> UseAsync(BoosterController controller, CancellationToken ct)
+        public void Execute(BoosterController controller, Action<BoosterResult> onDone)
         {
             bool revealed = controller.Session.RandomReveal();
-            BoosterResult result = revealed ? BoosterResult.Ok(Type) : BoosterResult.Rejected(Type, "no unrevealed cats");
-            return UniTask.FromResult(result);
+            onDone(revealed ? BoosterResult.Ok(Type) : BoosterResult.Rejected(Type, "no unrevealed cats"));
         }
     }
 }

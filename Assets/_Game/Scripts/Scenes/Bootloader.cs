@@ -1,5 +1,6 @@
 using System;
 using CaskFramework.Assets;
+using CaskFramework.Audio;
 using CaskFramework.Core;
 using CaskFramework.Profile;
 using CaskFramework.UI;
@@ -19,6 +20,7 @@ namespace Cast.Game
             GameRuntime.Register<IUIManager>(_uiManager);
             GameRuntime.Register<IAssetManager>(new AssetManager());
             GameRuntime.Register<IProfileService>(new ProfileService());
+            //GameRuntime.Register<IAudioManager>(new AudioManager());
 
             var profile = GameRuntime.Get<IProfileService>();
             if (profile != null)
@@ -43,20 +45,12 @@ namespace Cast.Game
             var profile = GameRuntime.Get<IProfileService>();
             if (profile == null) return;
 
+            await UniTask.WaitUntil(() => _gameEntry.IsInitialized);
+
             if (profile.ProgressLevel > 1)
-            {
-                await GameRuntime.Get<IUIManager>().PushViewAsync<ViewHome>("ViewHome", stack: false, onLoad: (_, v) =>
-                {
-                    v.Setup(() =>
-                    {
-                        _gameEntry.RunFlowAsync().Forget();
-                    }, profile);
-                });
-            }
+                _gameEntry.StartInHome();
             else
-            {
-                _gameEntry.RunFlowAsync().Forget();
-            }
+                _gameEntry.StartInLevel();
 
             await UniTask.NextFrame();
             GameRuntime.Get<IUIManager>().PopTopView();

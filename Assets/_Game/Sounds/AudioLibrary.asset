@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 066206605f3043769349553c6c5e110c, type: 3}
+  m_Name: AudioLibrary
+  m_EditorClassIdentifier: CaskFramework::CaskFramework.Audio.AudioLibrary
+  _entries:
+  - key: SFX_ButtonCancelClick
+    clip: {fileID: 8300000, guid: a220e6895fc984519a77d405158a65ea, type: 3}
+  - key: SFX_ButtonClick
+    clip: {fileID: 8300000, guid: 63bf11d467e4548b9873cf7a6d0299be, type: 3}
+  - key: SFX_Failed
+    clip: {fileID: 8300000, guid: 8179496b0db3c4e05a5ce411ad02fd99, type: 3}
+  - key: SFX_RevealFailure
+    clip: {fileID: 8300000, guid: d0a89897d82f5481d8768f8891c4daee, type: 3}
+  - key: SFX_RevealSuccess
+    clip: {fileID: 8300000, guid: d5a52a8a927854f74848fe51994629ac, type: 3}
+  - key: SFX_Winning
+    clip: {fileID: 8300000, guid: ffa710d30568247a3b06bff67d07e778, type: 3}
+  - key: BGM_Background
+    clip: {fileID: 8300000, guid: cf825f4a3a832471c837902fa4364004, type: 3}

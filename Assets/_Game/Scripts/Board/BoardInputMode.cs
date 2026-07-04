@@ -6,5 +6,6 @@ namespace Cast.Game
         Play = 0,
         Targeting = 1,
         Locked = 2,
+        HintPreview = 3,
     }
 }

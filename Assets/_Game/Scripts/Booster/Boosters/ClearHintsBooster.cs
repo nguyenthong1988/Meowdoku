@@ -1,10 +1,7 @@
-using System.Threading;
-
-using Cysharp.Threading.Tasks;
+using System;
 
 namespace Cast.Game
 {
-
     public sealed class ClearHintsBooster : IBooster
     {
         public BoosterType Type => BoosterType.ClearHints;
@@ -13,11 +10,10 @@ namespace Cast.Game
         public bool CanUse(IGameSession session) =>
             session != null && session.Phase == GamePhase.Playing;
 
-        public async UniTask<BoosterResult> UseAsync(BoosterController ctx, CancellationToken ct)
+        public void Execute(BoosterController controller, Action<BoosterResult> onDone)
         {
-            bool applied = ctx.Session.ClearAllHints();
-            await UniTask.CompletedTask;
-            return applied ? BoosterResult.Ok(Type) : BoosterResult.Rejected(Type, "no hints to clear");
+            bool applied = controller.Session.ClearAllHints();
+            onDone(applied ? BoosterResult.Ok(Type) : BoosterResult.Rejected(Type, "no hints to clear"));
         }
     }
 }
