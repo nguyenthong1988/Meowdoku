@@ -76,7 +76,7 @@ namespace Cast.Game
             int paletteLength = colors?.Length ?? -1; 
 
             var grid = new CellData[size, size];
-            var solution = new List<CatPlacement>();
+            var solution = new List<CharacterPlacement>();
             var catColors = new HashSet<int>();
             var regions = new HashSet<int>();
 
@@ -116,7 +116,7 @@ namespace Cast.Game
                     if (!catColors.Add(colorIndex))
                         result.Add(LevelRule.OneCatPerColor,
                             $"Color index {colorIndex} has more than one cat (duplicate uppercase letter).");
-                    solution.Add(new CatPlacement(row, col, (sbyte)colorIndex));
+                    solution.Add(new CharacterPlacement(row, col, (sbyte)colorIndex));
                 }
             }
 

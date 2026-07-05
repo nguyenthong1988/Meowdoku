@@ -17,7 +17,7 @@ namespace Cast.Game
 
         public Color[] Colors { get; }
 
-        public IReadOnlyList<CatPlacement> Solution { get; }
+        public IReadOnlyList<CharacterPlacement> Solution { get; }
 
         public int RegionCount { get; }
 
@@ -27,7 +27,7 @@ namespace Cast.Game
             Difficulty difficulty,
             CellData[,] grid,
             Color[] colors,
-            IReadOnlyList<CatPlacement> solution,
+            IReadOnlyList<CharacterPlacement> solution,
             int regionCount)
         {
             Id = id;

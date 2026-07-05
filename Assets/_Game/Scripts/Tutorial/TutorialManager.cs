@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
+using CaskFramework.UI;
 
 namespace Cast.Game
 {
     public sealed class TutorialManager
     {
-        private readonly TutorialStepContext _context;
+        public IGameSession Session { get; }
+        public BoardView Board { get; }
+        public IBoardInput Input { get; }
+        public TutorialController View { get; }
+        public IUIManager Ui { get; }
 
         private IReadOnlyList<TutorialStep> _steps;
         private Action _onFinished;
@@ -13,9 +18,14 @@ namespace Cast.Game
         private bool _running;
         private bool _awaitingCompletion;
 
-        public TutorialManager(TutorialStepContext context)
+        public TutorialManager(IGameSession session, BoardView board, IBoardInput input,
+                                TutorialController view, IUIManager ui)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            Session = session;
+            Board = board;
+            Input = input;
+            View = view;
+            Ui = ui;
         }
 
         public bool IsRunning => _running;
@@ -48,7 +58,7 @@ namespace Cast.Game
             _onFinished = null;
             _steps = null;
 
-            current?.End(_context);
+            current?.End(this);
         }
 
         private void Advance()
@@ -63,7 +73,7 @@ namespace Cast.Game
 
             _awaitingCompletion = true;
             int startedIndex = _currentIndex;
-            _steps[_currentIndex].Begin(_context, () => OnStepCompleted(startedIndex));
+            _steps[_currentIndex].Begin(this, () => OnStepCompleted(startedIndex));
         }
 
         private void OnStepCompleted(int index)

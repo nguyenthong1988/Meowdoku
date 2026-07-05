@@ -82,7 +82,7 @@ namespace Cast.Game
 
         private static void CheckSolutionRules(LevelData level, LevelValidationResult result)
         {
-            IReadOnlyList<CatPlacement> cats = level.Solution;
+            IReadOnlyList<CharacterPlacement> cats = level.Solution;
             if (cats == null || cats.Count == 0)
                 return;
 
@@ -91,7 +91,7 @@ namespace Cast.Game
 
             for (int i = 0; i < cats.Count; i++)
             {
-                CatPlacement cat = cats[i];
+                CharacterPlacement cat = cats[i];
 
                 if (!rows.Add(cat.Row))
                     result.Add(LevelRule.NoSharedRow, $"Two cats share row {cat.Row}.");
@@ -100,7 +100,7 @@ namespace Cast.Game
 
                 for (int j = i + 1; j < cats.Count; j++)
                 {
-                    CatPlacement other = cats[j];
+                    CharacterPlacement other = cats[j];
                     if (Math.Abs(cat.Row - other.Row) <= 1 && Math.Abs(cat.Col - other.Col) <= 1)
                         result.Add(LevelRule.NoContact,
                             $"Cats at (row {cat.Row}, col {cat.Col}) and (row {other.Row}, col {other.Col}) touch.");

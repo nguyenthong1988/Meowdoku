@@ -38,6 +38,7 @@ SpriteAtlas:
     cachedData: {fileID: 0}
     packedSpriteRenderDataKeys:
     - a44efad01189c48f687d213d2be5cb64: 21300000
+    - f3ba4381225a34ae4bbbe7d8cc658960: 21300000
     - 686d47b24ed2843c68bedbe3f0cecc87: 21300000
     - 22068253931fa471ab9cc9e4b83a125e: 21300000
     - b5caa254eacad4e75b4d0a8710d71782: 21300000
@@ -56,6 +57,7 @@ SpriteAtlas:
     - f77c1cdb7ed38447ca014e883376a141: 21300000
     - 73cbca8cad26e4276b02e796506120c8: 21300000
     - 4012d89c6c45e4d5ca25ee4ec988afd7: 21300000
+    - 2b5e136d8baec4847a93b5b32ca4ec92: 21300000
     - 5b43eefd9494948498cdac3326e75463: 21300000
     - 12925e2e734c4409492e17d142b8e3ed: 21300000
     - bff21f5e414f94cb9ad157069dc850df: 21300000
@@ -64,6 +66,7 @@ SpriteAtlas:
   m_MasterAtlas: {fileID: 0}
   m_PackedSprites:
   - {fileID: 21300000, guid: a44efad01189c48f687d213d2be5cb64, type: 3}
+  - {fileID: 21300000, guid: f3ba4381225a34ae4bbbe7d8cc658960, type: 3}
   - {fileID: 21300000, guid: 686d47b24ed2843c68bedbe3f0cecc87, type: 3}
   - {fileID: 21300000, guid: 22068253931fa471ab9cc9e4b83a125e, type: 3}
   - {fileID: 21300000, guid: b5caa254eacad4e75b4d0a8710d71782, type: 3}
@@ -82,6 +85,7 @@ SpriteAtlas:
   - {fileID: 21300000, guid: f77c1cdb7ed38447ca014e883376a141, type: 3}
   - {fileID: 21300000, guid: 73cbca8cad26e4276b02e796506120c8, type: 3}
   - {fileID: 21300000, guid: 4012d89c6c45e4d5ca25ee4ec988afd7, type: 3}
+  - {fileID: 21300000, guid: 2b5e136d8baec4847a93b5b32ca4ec92, type: 3}
   - {fileID: 21300000, guid: 5b43eefd9494948498cdac3326e75463, type: 3}
   - {fileID: 21300000, guid: 12925e2e734c4409492e17d142b8e3ed, type: 3}
   - {fileID: 21300000, guid: bff21f5e414f94cb9ad157069dc850df, type: 3}
@@ -89,6 +93,7 @@ SpriteAtlas:
   - {fileID: 21300000, guid: e43e6dff636124e98b41b97d21b316b9, type: 3}
   m_PackedSpriteNamesToIndex:
   - badge-green
+  - heart_break_R
   - mark_hint
   - booser-box
   - lotus4
@@ -106,7 +111,8 @@ SpriteAtlas:
   - lotus5
   - lotus8
   - lotus2
-  - background
+  - Background
+  - heart_break_L
   - pixel
   - heart
   - lotus6

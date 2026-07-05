@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityScreenNavigator.Runtime.Core.Modal;
@@ -10,6 +11,7 @@ namespace Cast.Game
     {
         [SerializeField] private Button _confirmButton;
         [SerializeField] private TMP_Text _messageText;
+        [SerializeField] private Transform _content;
         [SerializeField] private Image _colorSwatch;
 
         private Action _onConfirm;
@@ -19,7 +21,11 @@ namespace Cast.Game
 
         public void Show(string message, Color color)
         {
-            if (_messageText != null) _messageText.text = message;
+            if (_messageText != null)
+            {
+                _content.gameObject.SetActive(true);
+                _messageText.text = message;
+            }
             if (_colorSwatch != null) _colorSwatch.color = color;
         }
 

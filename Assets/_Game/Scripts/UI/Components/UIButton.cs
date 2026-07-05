@@ -10,7 +10,7 @@ using CaskFramework.Audio;
 
 public class UIButton : Button
 {
-    [SerializeField] string sfxName = "UI_Button_Click";
+    [SerializeField] string sfxName = "SFX_ButtonClick";
     [SerializeField] bool hasHaptic = true;
     [SerializeField] private HapticType hapticType = HapticType.Button;
     [SerializeField] private bool clickAnimation = true;
@@ -131,5 +131,6 @@ public class UIButton : Button
         {
             GameRuntime.Get<IAudioManager>().PlaySfx(sfxName);
         }
+        GameRuntime.Get<IHapticService>()?.Play(hapticType);
     }
 }

@@ -192,9 +192,18 @@ MonoBehaviour:
   _usePrefabNameAsIdentifier: 1
   _identifier: 
   _animationContainer:
-    _enterAnimations: []
-    _exitAnimations: []
+    _enterAnimations:
+    - _partnerModalIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: 3ad9c238320f34ce4888532a6127399a, type: 2}
+    _exitAnimations:
+    - _partnerModalIdentifierRegex: 
+      _assetType: 1
+      _animationBehaviour: {fileID: 0}
+      _animationObject: {fileID: 11400000, guid: aea14e1af2e6d47ceaa7e507e75890b2, type: 2}
   _dontDestroyOnClose: 0
+  _ignoreBackdrop: 0
   _titleLabel: {fileID: 3143253114705701262}
   _retryButton: {fileID: 3339732449545010438}
   _reviveButton: {fileID: 8993262280216144856}
@@ -631,7 +640,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  sfxName: UI_Button_Click
+  sfxName: SFX_ButtonClick
   hasHaptic: 1
   hapticType: 4
   clickAnimation: 1
@@ -762,7 +771,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  sfxName: UI_Button_Click
+  sfxName: SFX_ButtonClick
   hasHaptic: 1
   hapticType: 4
   clickAnimation: 1

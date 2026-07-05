@@ -40,7 +40,7 @@ namespace Cast.Game
             if (CatsRevealed != Level.Solution.Count) return false;
             for (int i = 0; i < Level.Solution.Count; i++)
             {
-                CatPlacement c = Level.Solution[i];
+                CharacterPlacement c = Level.Solution[i];
                 if (_marks[c.Row, c.Col] != PlayerMark.Character) return false;
             }
             return true;

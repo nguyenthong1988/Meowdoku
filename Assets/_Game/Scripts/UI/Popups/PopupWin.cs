@@ -56,8 +56,7 @@ namespace Cast.Game
 
             await UniTask.WhenAll(scaleMotion.ToUniTask(), alphaMotion.ToUniTask());
 
-            if (VFXManager.Instance != null)
-                VFXManager.Instance.PlayWinConfetti();
+            PlayWinConfetti();
 
             await UniTask.Delay(TimeSpan.FromSeconds(1f));
 
@@ -72,6 +71,21 @@ namespace Cast.Game
             await UniTask.WhenAll(btnScaleMotion.ToUniTask(), btnAlphaMotion.ToUniTask());
 
             _nextButtonCanvasGroup.interactable = true;
+        }
+
+        private void PlayWinConfetti()
+        {
+            if (VFXManager.Instance == null) return;
+
+            Camera cam = Camera.main;
+            if (cam == null) return;
+
+            float depth = 10f;
+            Vector3 leftMid = cam.ScreenToWorldPoint(new Vector3(0f, Screen.height * 0.5f, depth));
+            Vector3 rightMid = cam.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height * 0.5f, depth));
+
+            VFXManager.Instance.Play(VfxIds.WinConfetti, leftMid, Quaternion.Euler(-60f, 90f, -90f));
+            VFXManager.Instance.Play(VfxIds.WinConfetti, rightMid, Quaternion.Euler(240f, 90f, -90f));
         }
     }
 }

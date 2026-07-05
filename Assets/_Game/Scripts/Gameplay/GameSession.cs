@@ -199,18 +199,18 @@ namespace Cast.Game
         {
             if (_phase != GamePhase.Playing) return false;
 
-            var unrevealed = new List<CatPlacement>();
-            IReadOnlyList<CatPlacement> solution = Level.Solution;
+            var unrevealed = new List<CharacterPlacement>();
+            IReadOnlyList<CharacterPlacement> solution = Level.Solution;
             for (int i = 0; i < solution.Count; i++)
             {
-                CatPlacement p = solution[i];
+                CharacterPlacement p = solution[i];
                 if (Board.GetMark(p.Row, p.Col) != PlayerMark.Character)
                     unrevealed.Add(p);
             }
 
             if (unrevealed.Count == 0) return false;
 
-            CatPlacement pick = unrevealed[UnityEngine.Random.Range(0, unrevealed.Count)];
+            CharacterPlacement pick = unrevealed[UnityEngine.Random.Range(0, unrevealed.Count)];
             Reveal(pick.Row, pick.Col);
             return true;
         }

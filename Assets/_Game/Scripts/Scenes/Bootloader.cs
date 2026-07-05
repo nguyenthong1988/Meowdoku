@@ -2,6 +2,7 @@ using System;
 using CaskFramework.Assets;
 using CaskFramework.Audio;
 using CaskFramework.Core;
+using CaskFramework.Haptic;
 using CaskFramework.Profile;
 using CaskFramework.UI;
 using Cysharp.Threading.Tasks;
@@ -20,7 +21,7 @@ namespace Cast.Game
             GameRuntime.Register<IUIManager>(_uiManager);
             GameRuntime.Register<IAssetManager>(new AssetManager());
             GameRuntime.Register<IProfileService>(new ProfileService());
-            //GameRuntime.Register<IAudioManager>(new AudioManager());
+            GameRuntime.Register<IHapticService>(new HapticService());
 
             var profile = GameRuntime.Get<IProfileService>();
             if (profile != null)

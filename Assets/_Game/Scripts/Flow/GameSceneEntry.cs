@@ -49,12 +49,14 @@ namespace Cast.Game
                 new SmartHintBooster(), new RevealBooster(),
                 new UndoBooster(), new ClearHintsBooster());
 
+            var gameplayViewRef = new GameplayViewRef();
+
             _machine = new GameStateMachine();
 
             _machine.Register(new HomeState(_machine, uiManager, _boardView, session, profile));
-            _machine.Register(new LoadLevelState(_machine, uiManager, reader, _boardView, session, interaction, boosters, profile));
+            _machine.Register(new LoadLevelState(_machine, uiManager, reader, _boardView, session, interaction, boosters, profile, gameplayViewRef));
             _machine.Register(new RevealState(_machine, _boardView, profile));
-            _machine.Register(new FtueState(_machine, session, _boardView, interaction, profile, _tutorial));
+            _machine.Register(new FtueState(_machine, session, _boardView, interaction, profile, _tutorial, uiManager, gameplayViewRef));
             _machine.Register(new PlayState(_machine, session));
             _machine.Register(new WinState(_machine, uiManager, _boardView, profile));
             _machine.Register(new LoseState(_machine, uiManager, _boardView));

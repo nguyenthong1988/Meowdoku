@@ -89,7 +89,11 @@ namespace Cast.Game
 
         private Transform CellParent => _cellRoot != null ? _cellRoot : transform;
 
-        public void SetVisible(bool visible) => CellParent.gameObject.SetActive(visible);
+        public void SetVisible(bool visible)
+        {
+            CellParent.gameObject.SetActive(visible);
+            if (_cellBackground != null) _cellBackground.gameObject.SetActive(visible);
+        }
 
         public void SetOverlay(bool enabled) { if (_overlayObject != null) _overlayObject.SetActive(enabled); }
 

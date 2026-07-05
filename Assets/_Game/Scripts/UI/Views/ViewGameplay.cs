@@ -39,6 +39,7 @@ namespace Cast.Game
         private Action _onRetryRequested;
         private Action _onEntryPositioned;
         private CanvasGroup _midContentCanvasGroup;
+        private CanvasGroup _canvasGroup;
 
         private void Awake()
         {
@@ -72,6 +73,12 @@ namespace Cast.Game
             if (_session != null)
                 _session.PhaseChanged -= OnPhaseChanged;
 
+            if (_boosters != null)
+            {
+                _boosters.BoosterStarted -= OnBoosterStarted;
+                _boosters.BoosterFinished -= OnBoosterFinished;
+            }
+
             _session = session;
             _boosters = boosters;
             _onHomeRequested = onHomeRequested;
@@ -79,6 +86,12 @@ namespace Cast.Game
             _onEntryPositioned = onEntryPositioned;
 
             _session.PhaseChanged += OnPhaseChanged;
+
+            if (_boosters != null)
+            {
+                _boosters.BoosterStarted += OnBoosterStarted;
+                _boosters.BoosterFinished += OnBoosterFinished;
+            }
 
             if (_heartBar != null) _heartBar.Bind(_session);
             if (_catCounter != null) _catCounter.Bind(_session);
@@ -159,6 +172,24 @@ namespace Cast.Game
             {
                 _session.PhaseChanged -= OnPhaseChanged;
             }
+
+            if (_boosters != null)
+            {
+                _boosters.BoosterStarted -= OnBoosterStarted;
+                _boosters.BoosterFinished -= OnBoosterFinished;
+            }
+        }
+
+        private void OnBoosterStarted(BoosterType type)
+        {
+            if (type == BoosterType.Hint)
+                SetVisible(false);
+        }
+
+        private void OnBoosterFinished(BoosterResult result)
+        {
+            if (result.Type == BoosterType.Hint)
+                SetVisible(true);
         }
 
         private void OnBoosterHintClicked() => UseBooster(BoosterType.Hint);
@@ -203,7 +234,20 @@ namespace Cast.Game
 
         public void SetVisible(bool visible)
         {
-            _canvasGroup.alpha = visible ? 1f : 0f;
+            CanvasGroup canvasGroup = GetOrAddCanvasGroup();
+            canvasGroup.alpha = visible ? 1f : 0f;
+            canvasGroup.interactable = visible;
+        }
+
+        private CanvasGroup GetOrAddCanvasGroup()
+        {
+            if (_canvasGroup == null)
+                _canvasGroup = gameObject.GetComponent<CanvasGroup>();
+
+            if (_canvasGroup == null)
+                _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+
+            return _canvasGroup;
         }
     }
 }

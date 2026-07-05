@@ -61,13 +61,13 @@ namespace Cast.Game
         public static HintResult Calculate(BoardState board, IReadOnlyCollection<sbyte> hintedColors)
         {
             LevelData level = board.Level;
-            IReadOnlyList<CatPlacement> solution = level.Solution;
+            IReadOnlyList<CharacterPlacement> solution = level.Solution;
 
-            var revealedCats = new List<CatPlacement>();
-            var unrevealedCats = new List<CatPlacement>();
+            var revealedCats = new List<CharacterPlacement>();
+            var unrevealedCats = new List<CharacterPlacement>();
             for (int i = 0; i < solution.Count; i++)
             {
-                CatPlacement p = solution[i];
+                CharacterPlacement p = solution[i];
                 if (board.GetMark(p.Row, p.Col) == PlayerMark.Character)
                     revealedCats.Add(p);
                 else
@@ -77,7 +77,7 @@ namespace Cast.Game
             if (unrevealedCats.Count == 0) return null;
 
             var unrevealedCatCells = new HashSet<(int, int)>();
-            foreach (CatPlacement cat in unrevealedCats)
+            foreach (CharacterPlacement cat in unrevealedCats)
                 unrevealedCatCells.Add((cat.Row, cat.Col));
 
             var excludedRows = new HashSet<int>();
@@ -85,7 +85,7 @@ namespace Cast.Game
             var excludedColors = new HashSet<sbyte>();
             var excludedNeighborhood = new HashSet<(int, int)>();
 
-            foreach (CatPlacement cat in revealedCats)
+            foreach (CharacterPlacement cat in revealedCats)
             {
                 excludedRows.Add(cat.Row);
                 excludedCols.Add(cat.Col);
@@ -180,7 +180,7 @@ namespace Cast.Game
 
         private static HintResult TryLines(
             List<(int Row, int Col, sbyte Color)> candidates,
-            List<CatPlacement> unrevealedCats,
+            List<CharacterPlacement> unrevealedCats,
             HashSet<(int, int)> unrevealedCatCells,
             IReadOnlyCollection<sbyte> hintedColors)
         {
@@ -218,13 +218,13 @@ namespace Cast.Game
 
         private static LineSelection? BestLine(
             List<(int Row, int Col, sbyte Color)> candidates,
-            List<CatPlacement> unrevealedCats,
+            List<CharacterPlacement> unrevealedCats,
             HashSet<(int, int)> unrevealedCatCells,
             IReadOnlyCollection<sbyte> hintedColors,
             bool byRow)
         {
             var relevantLines = new HashSet<int>();
-            foreach (CatPlacement cat in unrevealedCats)
+            foreach (CharacterPlacement cat in unrevealedCats)
                 relevantLines.Add(byRow ? cat.Row : cat.Col);
 
             var byLine = new Dictionary<int, List<(int Row, int Col, sbyte Color)>>();
@@ -415,7 +415,7 @@ namespace Cast.Game
 
         private static HintResult Exact(
             List<(int Row, int Col, sbyte Color)> candidates,
-            List<CatPlacement> unrevealedCats,
+            List<CharacterPlacement> unrevealedCats,
             HashSet<(int, int)> candidateSet)
         {
             var colorCandidateCount = new Dictionary<sbyte, int>();
@@ -425,17 +425,17 @@ namespace Cast.Game
                 colorCandidateCount[cand.Color] = count + 1;
             }
 
-            var inCandidates = new List<CatPlacement>();
-            foreach (CatPlacement cat in unrevealedCats)
+            var inCandidates = new List<CharacterPlacement>();
+            foreach (CharacterPlacement cat in unrevealedCats)
                 if (candidateSet.Contains((cat.Row, cat.Col)))
                     inCandidates.Add(cat);
 
-            List<CatPlacement> pool = inCandidates.Count > 0 ? inCandidates : unrevealedCats;
+            List<CharacterPlacement> pool = inCandidates.Count > 0 ? inCandidates : unrevealedCats;
 
             bool found = false;
-            CatPlacement best = default;
+            CharacterPlacement best = default;
             int bestCount = int.MaxValue;
-            foreach (CatPlacement cat in pool)
+            foreach (CharacterPlacement cat in pool)
             {
                 colorCandidateCount.TryGetValue(cat.ColorIndex, out int count);
                 if (!found || count < bestCount || (count == bestCount && cat.ColorIndex < best.ColorIndex))

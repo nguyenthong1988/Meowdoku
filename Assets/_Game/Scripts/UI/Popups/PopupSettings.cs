@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 using CaskFramework.Core;
+using CaskFramework.Haptic;
 
 namespace Cast.Game
 {
@@ -22,12 +23,15 @@ namespace Cast.Game
         [SerializeField] private TextMeshProUGUI _versionText;
 
         private IAudioManager _audio;
+        private IHapticService _haptic;
         private Action _onFeedbackClicked;
         private Action _onRetryClicked;
 
         public override UniTask Initialize(Memory<object> args)
         {
             _audio = GameRuntime.Get<IAudioManager>();
+            _haptic = GameRuntime.Get<IHapticService>();
+
             if (_musicToggle != null)
             {
                 _musicToggle.onValueChanged.RemoveAllListeners();
@@ -44,7 +48,7 @@ namespace Cast.Game
             {
                 _vibrationToggle.onValueChanged.RemoveAllListeners();
                 _vibrationToggle.onValueChanged.AddListener(ToggleVibration);
-                _vibrationToggle.Init(true);
+                _vibrationToggle.Init(_haptic?.IsEnable ?? true);
             }
 
             RefreshLabels();
@@ -105,6 +109,7 @@ namespace Cast.Game
 
         private void ToggleVibration(bool isOn)
         {
+            _haptic?.SetEnable(isOn);
             RefreshLabels();
         }
 

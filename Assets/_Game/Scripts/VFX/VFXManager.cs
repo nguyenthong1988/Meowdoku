@@ -15,8 +15,6 @@ namespace Cast.Game
         [SerializeField] private float _cleanupInterval = 5f;
         [SerializeField] private float _touchWorldDepth = 10f;
         [SerializeField] private bool _ignoreTouchWhenOverUI = true;
-        [Header("Win Confetti")]
-        [SerializeField] private float _winConfettiWorldDepth = 10f;
 
         public static VFXManager Instance { get; private set; }
 
@@ -91,6 +89,11 @@ namespace Cast.Game
             return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
         }
 
+        public void Play(string id)
+        {
+            Play(id, Vector3.zero, Quaternion.identity);
+        }
+
         public void Play(string id, Vector3 position)
         {
             Play(id, position, Quaternion.identity);
@@ -106,7 +109,7 @@ namespace Cast.Game
                 return;
             }
 
-            ParticleSystem instance = pool.Rent(position, rotation);
+            VfxInstance instance = pool.Rent(position, rotation);
             if (instance == null) return;
 
             float lifetime = pool.Config.InstanceLifetime;
@@ -129,24 +132,6 @@ namespace Cast.Game
             Play(VfxIds.Touch, world);
         }
 
-        public void PlayConfetti()
-        {
-            Vector3 position = Camera.main != null ? Camera.main.transform.position + Camera.main.transform.forward * _touchWorldDepth : Vector3.zero;
-            Play(VfxIds.Confetti, position);
-        }
-
-        public void PlayWinConfetti()
-        {
-            Camera cam = Camera.main;
-            if (cam == null) return;
-
-            Vector3 leftMid = cam.ScreenToWorldPoint(new Vector3(0f, Screen.height * 0.5f, _winConfettiWorldDepth));
-            Vector3 rightMid = cam.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height * 0.5f, _winConfettiWorldDepth));
-
-            Play(VfxIds.WinConfetti, leftMid, Quaternion.Euler(-60f, 90f, -90f));
-            Play(VfxIds.WinConfetti, rightMid, Quaternion.Euler(240f, 90f, -90f));
-        }
-
         private void BuildPools()
         {
             foreach (VfxPoolConfig config in _configs)
@@ -165,13 +150,15 @@ namespace Cast.Game
             if (!_enableTouchInput || _touchVfxPrefab == null) return;
             if (_pools.ContainsKey(VfxIds.Touch)) return;
 
-            if (!_touchVfxPrefab.TryGetComponent(out ParticleSystem prefab))
+            bool hasParticle = _touchVfxPrefab.GetComponentInChildren<ParticleSystem>() != null;
+            bool hasInstance = _touchVfxPrefab.GetComponentInChildren<VfxInstance>() != null;
+            if (!hasParticle && !hasInstance)
             {
-                Debug.LogWarning("[VFXManager] Touch VFX prefab has no ParticleSystem component.");
+                Debug.LogWarning("[VFXManager] Touch VFX prefab has no ParticleSystem or VfxInstance component.");
                 return;
             }
 
-            _pools[VfxIds.Touch] = new VfxPool(new VfxPoolConfig(VfxIds.Touch, prefab, 3), transform);
+            _pools[VfxIds.Touch] = new VfxPool(new VfxPoolConfig(VfxIds.Touch, _touchVfxPrefab, 3), transform);
         }
 
         private void UpdateActiveInstances()
@@ -179,7 +166,7 @@ namespace Cast.Game
             for (int i = _active.Count - 1; i >= 0; i--)
             {
                 ActiveVfx active = _active[i];
-                ParticleSystem instance = active.Instance;
+                VfxInstance instance = active.Instance;
 
                 if (instance == null)
                 {
@@ -189,13 +176,12 @@ namespace Cast.Game
 
                 if (!active.Stopped && Time.unscaledTime >= active.StopTime)
                 {
-                    if (instance.isPlaying)
-                        instance.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    instance.Stop();
                     active.Stopped = true;
                     _active[i] = active;
                 }
 
-                if (instance.IsAlive(true)) continue;
+                if (instance.IsAlive) continue;
 
                 bool cachingAllowed = !IsPoolExpired(active.Pool);
                 active.Pool.Return(instance, cachingAllowed);
@@ -236,7 +222,7 @@ namespace Cast.Game
         private struct ActiveVfx
         {
             public VfxPool Pool;
-            public ParticleSystem Instance;
+            public VfxInstance Instance;
             public float StopTime;
             public bool Stopped;
         }

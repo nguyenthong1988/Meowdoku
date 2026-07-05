@@ -11,14 +11,23 @@ namespace Cast.Game
     {
         [SerializeField] private SpriteRenderer _background;
         [SerializeField] private SpriteRenderer _character;
-        [SerializeField] private SpriteRenderer _markHint;
-        [SerializeField] private SpriteRenderer _markWrong;
+        [SerializeField] private SpriteRenderer _markHintL;
+        [SerializeField] private SpriteRenderer _markHintR;
+        [SerializeField] private SpriteRenderer _markWrongL;
+        [SerializeField] private SpriteRenderer _markWrongR;
+        [SerializeField] private Animator _animator;
         [SerializeField] private SpriteAsset _spriteAsset;
         [SerializeField] private float _ghostAlpha = 0.45f;
+
+        private static readonly int StateIdle = Animator.StringToHash("Idle");
+        private static readonly int StateReveal = Animator.StringToHash("Reveal");
+        private static readonly int StateHint = Animator.StringToHash("Hint");
+        private static readonly int StateWrong = Animator.StringToHash("Wrong");
 
         private float _baseScale = 1f;
         private GhostState _ghost = GhostState.None;
         private IAudioManager _audio;
+        private int _currentState = StateIdle;
 
         private enum GhostState : byte { None = 0, Hint = 1, Reveal = 2 }
 
@@ -73,21 +82,23 @@ namespace Cast.Game
             bool ghostHint = _ghost == GhostState.Hint;
             bool ghostReveal = _ghost == GhostState.Reveal;
 
-            bool showCharacter = CurrentMark == PlayerMark.Character || ghostReveal;
-            bool showHint = CurrentMark == PlayerMark.Hint || ghostHint;
-            bool showWrong = CurrentMark == PlayerMark.Wrong;
+            int targetState = StateIdle;
+            if (CurrentMark == PlayerMark.Character || ghostReveal) targetState = StateReveal;
+            else if (CurrentMark == PlayerMark.Hint || ghostHint) targetState = StateHint;
+            else if (CurrentMark == PlayerMark.Wrong) targetState = StateWrong;
 
-            if (_character != null)
-            {
-                _character.enabled = showCharacter;
-                SetRendererAlpha(_character, ghostReveal && CurrentMark != PlayerMark.Character ? _ghostAlpha : 1f);
-            }
-            if (_markHint != null)
-            {
-                _markHint.enabled = showHint;
-                SetRendererAlpha(_markHint, ghostHint && CurrentMark != PlayerMark.Hint ? _ghostAlpha : 1f);
-            }
-            if (_markWrong != null) _markWrong.enabled = showWrong;
+            PlayState(targetState);
+
+            SetRendererAlpha(_character, ghostReveal && CurrentMark != PlayerMark.Character ? _ghostAlpha : 1f);
+            SetRendererAlpha(_markHintL, ghostHint && CurrentMark != PlayerMark.Hint ? _ghostAlpha : 1f);
+            SetRendererAlpha(_markHintR, ghostHint && CurrentMark != PlayerMark.Hint ? _ghostAlpha : 1f);
+        }
+
+        private void PlayState(int state)
+        {
+            if (_currentState == state) return;
+            _currentState = state;
+            if (_animator != null) _animator.Play(state);
         }
 
         private static void SetRendererAlpha(SpriteRenderer sr, float a)
@@ -118,20 +129,20 @@ namespace Cast.Game
         public void PlayPlace()
         {
             _audio.PlaySfx(AudioNames.SFX_REVEAL_SUCCESS);
-            LMotion.Create(_baseScale * 0.7f, _baseScale, 0.25f).WithEase(Ease.OutBack)
-                .Bind(this, (s, c) => c.transform.localScale = Vector3.one * s);
         }
 
         public void PlayShake()
         {
             _audio.PlaySfx(AudioNames.SFX_REVEAL_FAILURE);
-            LMotion.Create(_baseScale * 1.12f, _baseScale, 0.3f).WithEase(Ease.OutElastic)
-                .Bind(this, (s, c) => c.transform.localScale = Vector3.one * s);
         }
 
         private void SetAlpha(float a)
         {
             ApplyAlpha(_background, a);
+            ApplyAlpha(_markHintL, a);
+            ApplyAlpha(_markHintR, a);
+            ApplyAlpha(_markWrongL, a);
+            ApplyAlpha(_markWrongR, a);
         }
 
         private static void ApplyAlpha(SpriteRenderer sr, float a)
@@ -158,8 +169,10 @@ namespace Cast.Game
         {
             if (_background != null) _background.sortingOrder = order;
             if (_character != null) _character.sortingOrder = order + 1;
-            if (_markHint != null) _markHint.sortingOrder = order + 1;
-            if (_markWrong != null) _markWrong.sortingOrder = order + 1;
+            if (_markHintL != null) _markHintL.sortingOrder = order + 1;
+            if (_markHintR != null) _markHintR.sortingOrder = order + 1;
+            if (_markWrongL != null) _markWrongL.sortingOrder = order + 1;
+            if (_markWrongR != null) _markWrongR.sortingOrder = order + 1;
         }
 
         public void SetSortingLayer(string layerName)
@@ -168,8 +181,10 @@ namespace Cast.Game
 
             if (_background != null) _background.sortingLayerID = sortingLayerID;
             if (_character != null) _character.sortingLayerID = sortingLayerID;
-            if (_markHint != null) _markHint.sortingLayerID = sortingLayerID;
-            if (_markWrong != null) _markWrong.sortingLayerID = sortingLayerID;
+            if (_markHintL != null) _markHintL.sortingLayerID = sortingLayerID;
+            if (_markHintR != null) _markHintR.sortingLayerID = sortingLayerID;
+            if (_markWrongL != null) _markWrongL.sortingLayerID = sortingLayerID;
+            if (_markWrongR != null) _markWrongR.sortingLayerID = sortingLayerID;
         }
     }
 }

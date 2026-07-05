@@ -12,5 +12,6 @@ namespace Cast.Game
         public const string PopupSettings = "PopupSettings";
         public const string PopupIngameSettings = "PopupIngameSettings";
         public const string PopupBoosterHint = "PopupBoosterHint";
+        public const string PopupTutorialHint = "PopupTutorialHint";
     }
 }

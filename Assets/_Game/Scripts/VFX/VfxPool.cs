@@ -7,7 +7,7 @@ namespace Cast.Game
     {
         private readonly VfxPoolConfig _config;
         private readonly Transform _parent;
-        private readonly List<ParticleSystem> _idle = new List<ParticleSystem>();
+        private readonly List<VfxInstance> _idle = new List<VfxInstance>();
 
         public VfxPool(VfxPoolConfig config, Transform parent)
         {
@@ -19,32 +19,28 @@ namespace Cast.Game
         public VfxPoolConfig Config => _config;
         public float LastUsedTime { get; private set; }
 
-        public ParticleSystem Rent(Vector3 position, Quaternion rotation)
+        public VfxInstance Rent(Vector3 position, Quaternion rotation)
         {
             if (_config.Prefab == null) return null;
 
             LastUsedTime = Time.unscaledTime;
 
-            ParticleSystem instance = TakeIdle();
+            VfxInstance instance = TakeIdle();
             if (instance == null)
                 instance = CreateInstance();
             if (instance == null) return null;
 
-            if (instance.isPlaying)
-                instance.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-
             instance.transform.SetPositionAndRotation(position, rotation);
             instance.gameObject.SetActive(true);
-            instance.Play(true);
+            instance.Play();
             return instance;
         }
 
-        public void Return(ParticleSystem instance, bool cachingAllowed)
+        public void Return(VfxInstance instance, bool cachingAllowed)
         {
             if (instance == null) return;
 
-            if (instance.isPlaying)
-                instance.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            instance.Stop();
             instance.gameObject.SetActive(false);
 
             if (!cachingAllowed || _idle.Count >= _config.MaxPoolSize)
@@ -63,30 +59,42 @@ namespace Cast.Game
             _idle.Clear();
         }
 
-        private ParticleSystem TakeIdle()
+        private VfxInstance TakeIdle()
         {
             while (_idle.Count > 0)
             {
                 int last = _idle.Count - 1;
-                ParticleSystem candidate = _idle[last];
+                VfxInstance candidate = _idle[last];
                 _idle.RemoveAt(last);
                 if (candidate == null) continue;
-                if (candidate.IsAlive(true)) continue;
+                if (candidate.IsAlive) continue;
                 return candidate;
             }
             return null;
         }
 
-        private ParticleSystem CreateInstance()
+        private VfxInstance CreateInstance()
         {
-            ParticleSystem instance = Object.Instantiate(_config.Prefab, _parent);
-            ParticleSystem.MainModule main = instance.main;
-            main.stopAction = ParticleSystemStopAction.Disable;
-            instance.gameObject.SetActive(false);
+            GameObject go = Object.Instantiate(_config.Prefab, _parent);
+
+            VfxInstance instance = go.GetComponent<VfxInstance>();
+            if (instance == null)
+            {
+                if (go.GetComponentInChildren<ParticleSystem>() != null)
+                    instance = go.AddComponent<ParticleVfx>();
+            }
+
+            if (instance == null)
+            {
+                Object.Destroy(go);
+                return null;
+            }
+
+            go.SetActive(false);
             return instance;
         }
 
-        private static void DestroyInstance(ParticleSystem instance)
+        private static void DestroyInstance(VfxInstance instance)
         {
             if (instance != null)
                 Object.Destroy(instance.gameObject);

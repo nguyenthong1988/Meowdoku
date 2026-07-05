@@ -15,12 +15,12 @@ namespace Cast.Game
         private readonly BoardInputHandler _interaction;
         private readonly IBoosterController _boosters;
         private readonly IProfileService _profile;
-
-        private ViewGameplay _gameplayView;
+        private readonly GameplayViewRef _gameplayViewRef;
 
         public LoadLevelState(GameStateMachine machine, IUIManager ui, ILevelDataReader reader,
                               BoardView board, IGameSession session, BoardInputHandler interaction,
-                              IBoosterController boosters, IProfileService profile)
+                              IBoosterController boosters, IProfileService profile,
+                              GameplayViewRef gameplayViewRef)
         {
             _machine = machine;
             _ui = ui;
@@ -30,6 +30,7 @@ namespace Cast.Game
             _interaction = interaction;
             _boosters = boosters;
             _profile = profile;
+            _gameplayViewRef = gameplayViewRef;
         }
 
         public void Enter()
@@ -60,9 +61,9 @@ namespace Cast.Game
             _board.BindRendering(_session);
             _interaction.Bind(_session);
 
-            if (_gameplayView == null)
+            if (_gameplayViewRef.View == null)
             {
-                await _ui.PushViewAsync<ViewGameplay>(UIConst.ViewGameplay, stack: false, onLoad: (_, view) => _gameplayView = view);
+                await _ui.PushViewAsync<ViewGameplay>(UIConst.ViewGameplay, stack: false, onLoad: (_, view) => _gameplayViewRef.View = view);
             }
 
             BindGameplayView();
@@ -70,7 +71,7 @@ namespace Cast.Game
 
         private void BindGameplayView()
         {
-            _gameplayView.Bind(
+            _gameplayViewRef.View.Bind(
                 _session,
                 _boosters,
                 _board,

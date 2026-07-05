@@ -617,7 +617,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1068228319
   m_SortingLayer: 3
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 5b43eefd9494948498cdac3326e75463, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 0.69803923}
@@ -983,7 +983,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1248926871
 Transform:
   m_ObjectHideFlags: 0
@@ -993,7 +993,7 @@ Transform:
   m_GameObject: {fileID: 1248926870}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.000000029802322, y: 0.000000029802322, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1619,7 +1619,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Cast.Game.VFXManager
   _configs:
   - _id: win_confetti
-    _prefab: {fileID: 7661647527480344136, guid: 2c000b09ed0cd4f748de7732c5e534fb, type: 3}
+    _prefab: {fileID: 7661647527480344142, guid: 2c000b09ed0cd4f748de7732c5e534fb, type: 3}
     _maxPoolSize: 2
     _instanceLifetime: 0
     _persistentPool: 1
@@ -1629,7 +1629,6 @@ MonoBehaviour:
   _cleanupInterval: 5
   _touchWorldDepth: 10
   _ignoreTouchWhenOverUI: 0
-  _winConfettiWorldDepth: 10
 --- !u!4 &1606810765
 Transform:
   m_ObjectHideFlags: 0
