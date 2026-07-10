@@ -8,7 +8,7 @@ namespace Cast.Game
     {
         BoardInputMode Mode { get; }
         void SetMode(BoardInputMode mode);
-        void BeginHintPreview(IReadOnlyCollection<(int Row, int Col)> allowedCells, Action<int, int> onTap, Action<int, int> onDoubleTap);
+        void BeginHintPreview(IReadOnlyCollection<(int Row, int Col)> allowedCells, Action<int, int> onTap, Action<int, int> onDoubleTap, Action<int, int> onDrag = null);
         void EndHintPreview();
     }
 }

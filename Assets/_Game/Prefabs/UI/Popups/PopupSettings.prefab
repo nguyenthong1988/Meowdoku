@@ -2484,7 +2484,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  sfxName: UI_Button_Click
+  sfxName: SFX_ButtonClick
   hasHaptic: 1
   hapticType: 4
   clickAnimation: 1

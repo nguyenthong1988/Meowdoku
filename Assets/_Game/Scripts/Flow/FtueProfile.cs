@@ -14,5 +14,8 @@ namespace Cast.Game
 
         public static bool ShouldRunFtue(this IProfileService profile) =>
             profile != null && profile.ProgressLevel == 1 && !profile.FtueCompleted();
+
+        public static int CurrentLevelId(this IProfileService profile) =>
+            profile.ProgressLevel - 1;
     }
 }

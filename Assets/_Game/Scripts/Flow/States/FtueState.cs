@@ -107,7 +107,6 @@ namespace Cast.Game
         private void OnTutorialFinished()
         {
             _profile.CompleteFtue();
-            _session.ClearAllHints();
 
             if (_endedWon)
             {
@@ -128,7 +127,6 @@ namespace Cast.Game
         private void CompleteAndAdvance()
         {
             _profile.CompleteFtue();
-            _session.ClearAllHints();
             _machine.ChangeState<PlayState>();
         }
     }

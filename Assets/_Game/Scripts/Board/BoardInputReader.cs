@@ -12,6 +12,14 @@ namespace Cast.Game
 
         public event Action<CellGesture> Gesture;
 
+        /// <summary>
+        /// When true, a Tap is held back for DoubleTapWindow seconds so a second tap
+        /// on the same cell becomes a single clean DoubleTap (no Tap fired first).
+        /// When false, Tap fires immediately on release (legacy behavior, used when
+        /// double taps are meaningless in the current mode, e.g. targeting).
+        /// </summary>
+        public bool DeferTap { get; set; }
+
         private BoardLayout _layout;
         private Camera _camera;
         private bool _enabled;
@@ -25,6 +33,13 @@ namespace Cast.Game
         private bool _dragStarted;
         private int _dragRow = -1, _dragCol = -1;
 
+        // Deferred-tap state (DeferTap == true).
+        private bool _hasPendingTap;
+        private bool _doubleTapCandidate;
+        private int _pendingRow = -1, _pendingCol = -1;
+        private float _pendingTime;
+
+        // Legacy double-tap tracking (DeferTap == false).
         private int _lastTapRow = -1, _lastTapCol = -1;
         private float _lastTapTime = -10f;
 
@@ -34,11 +49,27 @@ namespace Cast.Game
             _camera = cam;
         }
 
-        public void SetEnabled(bool on) => _enabled = on;
+        public void SetEnabled(bool on)
+        {
+            _enabled = on;
+            if (on) return;
+
+            // Drop transient state so nothing leaks into the next input mode.
+            _pressing = false;
+            _dragging = false;
+            _dragStarted = false;
+            _hasPendingTap = false;
+            _doubleTapCandidate = false;
+            _lastTapTime = -10f;
+        }
 
         private void Update()
         {
             if (!_enabled || _camera == null) return;
+
+            // A held-back tap becomes a real Tap once the double-tap window closes.
+            if (_hasPendingTap && Time.unscaledTime - _pendingTime > _config.DoubleTapWindow)
+                FlushPendingTap();
 
             Pointer pointer = Pointer.current;
             if (pointer == null) return;
@@ -64,6 +95,27 @@ namespace Cast.Game
             _dragCol = -1;
             _downScreen = screen;
             _downTime = Time.unscaledTime;
+
+            _doubleTapCandidate = false;
+            if (!_hasPendingTap) return;
+
+            bool sameCell = !IsOverUI()
+                            && ScreenToCell(screen, out int row, out int col)
+                            && row == _pendingRow && col == _pendingCol;
+            bool inWindow = Time.unscaledTime - _pendingTime <= _config.DoubleTapWindow;
+
+            if (sameCell && inWindow)
+            {
+                // Second press landed on the same cell in time: this press is a
+                // double-tap attempt. Swallow the pending Tap so it never fires.
+                _hasPendingTap = false;
+                _doubleTapCandidate = true;
+            }
+            else
+            {
+                // Pressed elsewhere (or too late): the first tap was a real Tap.
+                FlushPendingTap();
+            }
         }
 
         private void OnPressHold(Vector2 screen)
@@ -108,12 +160,32 @@ namespace Cast.Game
             if (IsOverUI()) return;
             if (!ScreenToCell(screen, out int row, out int col)) return;
 
-            bool sameCell = row == _lastTapRow && col == _lastTapCol;
-            bool inWindow = Time.unscaledTime - _lastTapTime <= _config.DoubleTapWindow;
-
-            if (sameCell && inWindow)
+            if (DeferTap)
             {
-                _lastTapTime = -10f; 
+                if (_doubleTapCandidate && row == _pendingRow && col == _pendingCol)
+                {
+                    _doubleTapCandidate = false;
+                    Gesture?.Invoke(new CellGesture(row, col, PointerGesture.DoubleTap));
+                    return;
+                }
+
+                // Hold this tap back; it only fires as a Tap if no second tap
+                // follows within the double-tap window (see Update).
+                _doubleTapCandidate = false;
+                _hasPendingTap = true;
+                _pendingRow = row;
+                _pendingCol = col;
+                _pendingTime = Time.unscaledTime;
+                return;
+            }
+
+            // Immediate mode: Tap fires right away, DoubleTap fires on top of it.
+            bool sameLastCell = row == _lastTapRow && col == _lastTapCol;
+            bool inTapWindow = Time.unscaledTime - _lastTapTime <= _config.DoubleTapWindow;
+
+            if (sameLastCell && inTapWindow)
+            {
+                _lastTapTime = -10f;
                 Gesture?.Invoke(new CellGesture(row, col, PointerGesture.DoubleTap));
                 return;
             }
@@ -122,6 +194,13 @@ namespace Cast.Game
             _lastTapCol = col;
             _lastTapTime = Time.unscaledTime;
             Gesture?.Invoke(new CellGesture(row, col, PointerGesture.Tap));
+        }
+
+        private void FlushPendingTap()
+        {
+            if (!_hasPendingTap) return;
+            _hasPendingTap = false;
+            Gesture?.Invoke(new CellGesture(_pendingRow, _pendingCol, PointerGesture.Tap));
         }
 
         private void Emit(Vector2 screen, PointerGesture gesture)

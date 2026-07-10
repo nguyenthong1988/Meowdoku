@@ -134,6 +134,7 @@ namespace Cast.Game
         public void PlayShake()
         {
             _audio.PlaySfx(AudioNames.SFX_REVEAL_FAILURE);
+            VFXManager.Instance?.Play(VfxIds.HeartBreak, transform.position);
         }
 
         private void SetAlpha(float a)

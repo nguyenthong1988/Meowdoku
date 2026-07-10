@@ -20,6 +20,7 @@ namespace Cast.Game
         private readonly HashSet<(int, int)> _hintPreviewCells = new HashSet<(int, int)>();
         private Action<int, int> _hintPreviewTap;
         private Action<int, int> _hintPreviewDoubleTap;
+        private Action<int, int> _hintPreviewDrag;
 
         public BoardInputMode Mode { get; private set; } = BoardInputMode.Locked;
 
@@ -49,15 +50,22 @@ namespace Cast.Game
             _hintPreviewCells.Clear();
             _hintPreviewTap = null;
             _hintPreviewDoubleTap = null;
+            _hintPreviewDrag = null;
         }
 
         public void SetMode(BoardInputMode mode)
         {
             Mode = mode;
             _reader.SetEnabled(mode != BoardInputMode.Locked);
+
+            // Defer single taps only where a double tap has a distinct meaning,
+            // so a double tap fires cleanly without a Tap (hint flash) first.
+            // In targeting (and other modes) taps stay instant.
+            _reader.DeferTap = mode == BoardInputMode.Play
+                               || (mode == BoardInputMode.HintPreview && _hintPreviewDoubleTap != null);
         }
 
-        public void BeginHintPreview(IReadOnlyCollection<(int Row, int Col)> allowedCells, Action<int, int> onTap, Action<int, int> onDoubleTap)
+        public void BeginHintPreview(IReadOnlyCollection<(int Row, int Col)> allowedCells, Action<int, int> onTap, Action<int, int> onDoubleTap, Action<int, int> onDrag = null)
         {
             _hintPreviewCells.Clear();
             if (allowedCells != null)
@@ -65,6 +73,7 @@ namespace Cast.Game
                     _hintPreviewCells.Add((cell.Row, cell.Col));
             _hintPreviewTap = onTap;
             _hintPreviewDoubleTap = onDoubleTap;
+            _hintPreviewDrag = onDrag;
             SetMode(BoardInputMode.HintPreview);
         }
 
@@ -73,6 +82,7 @@ namespace Cast.Game
             _hintPreviewCells.Clear();
             _hintPreviewTap = null;
             _hintPreviewDoubleTap = null;
+            _hintPreviewDrag = null;
             if (Mode == BoardInputMode.HintPreview)
                 SetMode(_session != null && _session.Phase == GamePhase.Playing ? BoardInputMode.Play : BoardInputMode.Locked);
         }
@@ -110,11 +120,18 @@ namespace Cast.Game
                     return;
 
                 case BoardInputMode.HintPreview:
-                    if (!_hintPreviewCells.Contains((g.Row, g.Col))) return;
                     switch (g.Gesture)
                     {
-                        case PointerGesture.DoubleTap: _hintPreviewDoubleTap?.Invoke(g.Row, g.Col); break;
-                        case PointerGesture.Tap: _hintPreviewTap?.Invoke(g.Row, g.Col); break;
+                        case PointerGesture.DoubleTap:
+                            if (_hintPreviewCells.Contains((g.Row, g.Col))) _hintPreviewDoubleTap?.Invoke(g.Row, g.Col);
+                            break;
+                        case PointerGesture.Tap:
+                            if (_hintPreviewCells.Contains((g.Row, g.Col))) _hintPreviewTap?.Invoke(g.Row, g.Col);
+                            break;
+                        case PointerGesture.DragStart:
+                        case PointerGesture.DragMove:
+                            if (_hintPreviewCells.Contains((g.Row, g.Col))) _hintPreviewDrag?.Invoke(g.Row, g.Col);
+                            break;
                     }
                     return;
 

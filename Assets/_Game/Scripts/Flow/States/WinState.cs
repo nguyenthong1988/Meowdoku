@@ -43,7 +43,7 @@ namespace Cast.Game
             await UniTask.Delay(TimeSpan.FromSeconds(LastRevealDuration));
             _board.SetVisible(false);
 
-            int levelId = _profile.ProgressLevel;
+            int levelId = _profile.CurrentLevelId();
             ViewResult view = null;
             await _ui.PushViewAsync<ViewResult>(UIConst.ViewResult, stack: false, onLoad: (_, v) => view = v);
             if (view == null)

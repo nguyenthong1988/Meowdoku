@@ -13,7 +13,6 @@ namespace Cast.Game
         private readonly GameSessionConfig _config;
         private IProfileService _profile;
         private readonly Stack<MoveRecord> _undo = new Stack<MoveRecord>();
-        private readonly HashSet<sbyte> _hintedColors = new HashSet<sbyte>();
 
         private GamePhase _phase = GamePhase.Loading;
         private int _hearts;
@@ -53,7 +52,6 @@ namespace Cast.Game
 
         public void Begin()
         {
-            _hintedColors.Clear();
             _startTime = UnityEngine.Time.realtimeSinceStartup;
             SetPhase(GamePhase.Playing);
         }
@@ -237,10 +235,7 @@ namespace Cast.Game
         public HintResult GetHint()
         {
             if (_phase != GamePhase.Playing) return null;
-
-            HintResult result = HintCalculator.Calculate(Board, _hintedColors);
-            if (result != null) _hintedColors.Add(result.ColorIndex);
-            return result;
+            return HintCalculator.Calculate(Board);
         }
 
         public bool IsBoosterUnlocked(BoosterType type)

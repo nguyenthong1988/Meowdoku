@@ -45,7 +45,7 @@ namespace Cast.Game
                 manager.Board.GetCell(row, col)?.SetSortingLayer("UI");
             _highlighted = true;
 
-            manager.Input.BeginHintPreview(_cells, onTap: OnCellTapped, onDoubleTap: null);
+            manager.Input.BeginHintPreview(_cells, onTap: OnCellTapped, onDoubleTap: null, onDrag: OnCellDragged);
 
             ShowPopupAsync(manager).Forget();
         }
@@ -99,6 +99,21 @@ namespace Cast.Game
 
             _manager.Session.ToggleHint(row, col);
 
+            TryComplete();
+        }
+
+        private void OnCellDragged(int row, int col)
+        {
+            if (_completed) return;
+
+            if (_manager.Session.Board.GetMark(row, col) != PlayerMark.Hint)
+                _manager.Session.SetHint(row, col, true);
+
+            TryComplete();
+        }
+
+        private void TryComplete()
+        {
             if (!AllRequiredCellsHinted()) return;
 
             _completed = true;

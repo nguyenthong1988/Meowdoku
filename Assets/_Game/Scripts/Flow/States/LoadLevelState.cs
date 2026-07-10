@@ -44,7 +44,7 @@ namespace Cast.Game
 
         private async UniTaskVoid LoadAsync()
         {
-            int levelId = _profile.ProgressLevel;
+            int levelId = _profile.CurrentLevelId();
 
             LevelReadResult read = await _reader.ReadLevelAsync(levelId);
             if (!read.Success)

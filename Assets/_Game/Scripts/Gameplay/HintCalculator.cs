@@ -1,444 +1,888 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Cast.Game
 {
-    public enum HintReason
+    public enum HintStep : byte
     {
-        SingleCell,
-        RowSingleColor,
-        RowMultiColor,
-        ColumnSingleColor,
-        ColumnMultiColor,
-        Cluster,
-        Exact
+        RemoveWrongMark = 1,
+        ExcludeAroundCharacter = 2,
+        LastCellInColor = 3,
+        LastCellInLine = 4,
+        ColorLineLock = 5,
+        GroupLock = 6,
+        TrialContradiction = 7,
+        ChainContradiction = 8,
+        DirectReveal = 9,
+    }
+
+    public enum HintVictimKind : byte
+    {
+        None = 0,
+        Color = 1,
+        Row = 2,
+        Column = 3,
     }
 
     public sealed class HintResult
     {
-        public IReadOnlyList<(int Row, int Col)> Cells { get; }
-        public sbyte ColorIndex { get; }
-        public HintReason Reason { get; }
-        public string Message { get; }
-
-        public HintResult(IReadOnlyList<(int Row, int Col)> cells, sbyte colorIndex, HintReason reason, string message)
-        {
-            Cells = cells;
-            ColorIndex = colorIndex;
-            Reason = reason;
-            Message = message;
-        }
+        public HintStep Step;
+        public string Message;
+        public sbyte ColorIndex = -1;
+        public readonly List<(int Row, int Col)> FocusCells = new List<(int, int)>();
+        public readonly List<(int Row, int Col)> ExcludeCells = new List<(int, int)>();
+        public readonly List<(int Row, int Col)> VictimCells = new List<(int, int)>();
+        public readonly List<(int Row, int Col)> ChainCells = new List<(int, int)>();
+        public (int Row, int Col)? PlaceCell;
+        public (int Row, int Col)? RemoveMarkCell;
+        public (int Row, int Col)? TrialCell;
+        public HintVictimKind VictimKind = HintVictimKind.None;
+        public int VictimIndex = -1;
     }
 
-    public static class HintMessages
+    public static class HintColorNames
     {
-        public const string SingleCell = "Only one possible cell remains for this color.";
-        public const string RowSingleColor = "The cat in this row must be in the highlighted color.";
-        public const string RowMultiColor = "The cat in this row hides in one of these colors.";
-        public const string ColumnSingleColor = "The cat in this column must be in the highlighted color.";
-        public const string ColumnMultiColor = "The cat in this column hides in one of these colors.";
-        public const string Cluster = "Focus on this cluster - the cat is likely nearby.";
-        public const string Exact = "The cat is right here.";
-
-        public static string For(HintReason reason)
+        private static readonly string[] Names =
         {
-            switch (reason)
-            {
-                case HintReason.SingleCell: return SingleCell;
-                case HintReason.RowSingleColor: return RowSingleColor;
-                case HintReason.RowMultiColor: return RowMultiColor;
-                case HintReason.ColumnSingleColor: return ColumnSingleColor;
-                case HintReason.ColumnMultiColor: return ColumnMultiColor;
-                case HintReason.Cluster: return Cluster;
-                case HintReason.Exact: return Exact;
-                default: return string.Empty;
-            }
+            "Brown", "Khaki", "Indigo", "Red", "Green",
+            "Olive", "Plum", "Purple", "Jade", "Teal",
+        };
+
+        public static string Get(int colorIndex)
+        {
+            if (colorIndex >= 0 && colorIndex < Names.Length)
+                return Names[colorIndex];
+            return $"Color {colorIndex + 1}";
         }
     }
 
     public static class HintCalculator
     {
-        public static HintResult Calculate(BoardState board, IReadOnlyCollection<sbyte> hintedColors)
+        private const int MaxGroupSize = 4;
+        private const int MaxChainLength = 6;
+
+        private sealed class Snapshot
+        {
+            public BoardState Board;
+            public LevelData Level;
+            public int Size;
+            public int ColorCount;
+            public HashSet<(int, int)> SolutionCells;
+            public List<CharacterPlacement> PlacedCharacters;
+            public List<CharacterPlacement> MissingCharacters;
+            public bool[] ColorHasCharacter;
+            public bool[] RowHasCharacter;
+            public bool[] ColHasCharacter;
+            public List<(int Row, int Col)>[] ColorEmpties;
+            public List<(int Row, int Col)>[] RowEmpties;
+            public List<(int Row, int Col)>[] ColEmpties;
+            public List<(int Row, int Col)> AllEmpties;
+
+            public bool IsEmpty(int row, int col) =>
+                Level.GetCell(row, col).IsFilled && Board.GetMark(row, col) == PlayerMark.None;
+        }
+
+        public static HintResult Calculate(BoardState board)
+        {
+            Snapshot s = TakeSnapshot(board);
+            if (s.MissingCharacters.Count == 0) return null;
+
+            return TryRemoveWrongMark(s)
+                ?? TryExcludeAroundCharacter(s)
+                ?? TryLastCellInColor(s)
+                ?? TryLastCellInLine(s)
+                ?? TryColorLineLock(s)
+                ?? TryGroupLock(s)
+                ?? TryTrialContradiction(s)
+                ?? TryChainContradiction(s)
+                ?? DirectReveal(s);
+        }
+
+        private static Snapshot TakeSnapshot(BoardState board)
         {
             LevelData level = board.Level;
-            IReadOnlyList<CharacterPlacement> solution = level.Solution;
-
-            var revealedCats = new List<CharacterPlacement>();
-            var unrevealedCats = new List<CharacterPlacement>();
-            for (int i = 0; i < solution.Count; i++)
-            {
-                CharacterPlacement p = solution[i];
-                if (board.GetMark(p.Row, p.Col) == PlayerMark.Character)
-                    revealedCats.Add(p);
-                else
-                    unrevealedCats.Add(p);
-            }
-
-            if (unrevealedCats.Count == 0) return null;
-
-            var unrevealedCatCells = new HashSet<(int, int)>();
-            foreach (CharacterPlacement cat in unrevealedCats)
-                unrevealedCatCells.Add((cat.Row, cat.Col));
-
-            var excludedRows = new HashSet<int>();
-            var excludedCols = new HashSet<int>();
-            var excludedColors = new HashSet<sbyte>();
-            var excludedNeighborhood = new HashSet<(int, int)>();
-
-            foreach (CharacterPlacement cat in revealedCats)
-            {
-                excludedRows.Add(cat.Row);
-                excludedCols.Add(cat.Col);
-                excludedColors.Add(cat.ColorIndex);
-                for (int dr = -1; dr <= 1; dr++)
-                {
-                    for (int dc = -1; dc <= 1; dc++)
-                    {
-                        int nr = cat.Row + dr;
-                        int nc = cat.Col + dc;
-                        if (board.InBounds(nr, nc))
-                            excludedNeighborhood.Add((nr, nc));
-                    }
-                }
-            }
-
-            var candidates = new List<(int Row, int Col, sbyte Color)>();
-            var candidateSet = new HashSet<(int, int)>();
             int size = board.Size;
+            int colorCount = level.RegionCount;
+
+            var s = new Snapshot
+            {
+                Board = board,
+                Level = level,
+                Size = size,
+                ColorCount = colorCount,
+                SolutionCells = new HashSet<(int, int)>(),
+                PlacedCharacters = new List<CharacterPlacement>(),
+                MissingCharacters = new List<CharacterPlacement>(),
+                ColorHasCharacter = new bool[colorCount],
+                RowHasCharacter = new bool[size],
+                ColHasCharacter = new bool[size],
+                ColorEmpties = new List<(int, int)>[colorCount],
+                RowEmpties = new List<(int, int)>[size],
+                ColEmpties = new List<(int, int)>[size],
+                AllEmpties = new List<(int, int)>(),
+            };
+
+            for (int i = 0; i < colorCount; i++) s.ColorEmpties[i] = new List<(int, int)>();
+            for (int i = 0; i < size; i++)
+            {
+                s.RowEmpties[i] = new List<(int, int)>();
+                s.ColEmpties[i] = new List<(int, int)>();
+            }
+
+            foreach (CharacterPlacement p in level.Solution)
+                s.SolutionCells.Add((p.Row, p.Col));
+
+            foreach (CharacterPlacement p in level.Solution)
+            {
+                if (board.GetMark(p.Row, p.Col) == PlayerMark.Character)
+                    s.PlacedCharacters.Add(p);
+                else
+                    s.MissingCharacters.Add(p);
+            }
+
             for (int r = 0; r < size; r++)
             {
                 for (int c = 0; c < size; c++)
                 {
-                    CellData cell = level.GetCell(r, c);
-                    if (!cell.IsFilled) continue;
-                    if (excludedColors.Contains(cell.ColorIndex)) continue;
-                    if (board.GetMark(r, c) == PlayerMark.Character) continue;
-                    if (excludedRows.Contains(r)) continue;
-                    if (excludedCols.Contains(c)) continue;
-                    if (excludedNeighborhood.Contains((r, c))) continue;
-
-                    candidates.Add((r, c, cell.ColorIndex));
-                    candidateSet.Add((r, c));
+                    if (board.GetMark(r, c) != PlayerMark.Character) continue;
+                    s.RowHasCharacter[r] = true;
+                    s.ColHasCharacter[c] = true;
+                    sbyte color = level.GetCell(r, c).ColorIndex;
+                    if (color >= 0 && color < colorCount) s.ColorHasCharacter[color] = true;
                 }
             }
 
-            if (candidates.Count == 0) return null;
-
-            HintResult single = TrySingleCell(candidates, unrevealedCatCells);
-            if (single != null) return single;
-
-            HintResult lineResult = TryLines(candidates, unrevealedCats, unrevealedCatCells, hintedColors);
-            if (lineResult != null) return lineResult;
-
-            HintResult cluster = TryCluster(candidates, candidateSet, unrevealedCatCells);
-            if (cluster != null) return cluster;
-
-            return Exact(candidates, unrevealedCats, candidateSet);
-        }
-
-        private static bool ContainsCat(IEnumerable<(int Row, int Col)> cells, HashSet<(int, int)> unrevealedCatCells)
-        {
-            foreach (var cell in cells)
-                if (unrevealedCatCells.Contains(cell))
-                    return true;
-            return false;
-        }
-
-        private static HintResult TrySingleCell(
-            List<(int Row, int Col, sbyte Color)> candidates,
-            HashSet<(int, int)> unrevealedCatCells)
-        {
-            var byColor = new Dictionary<sbyte, List<(int Row, int Col)>>();
-            foreach (var cand in candidates)
+            for (int r = 0; r < size; r++)
             {
-                if (!byColor.TryGetValue(cand.Color, out var list))
+                for (int c = 0; c < size; c++)
                 {
-                    list = new List<(int, int)>();
-                    byColor[cand.Color] = list;
+                    if (!s.IsEmpty(r, c)) continue;
+                    s.AllEmpties.Add((r, c));
+                    s.RowEmpties[r].Add((r, c));
+                    s.ColEmpties[c].Add((r, c));
+                    sbyte color = level.GetCell(r, c).ColorIndex;
+                    if (color >= 0 && color < colorCount) s.ColorEmpties[color].Add((r, c));
                 }
-                list.Add((cand.Row, cand.Col));
             }
 
+            return s;
+        }
+
+        private static HintResult TryRemoveWrongMark(Snapshot s)
+        {
+            for (int r = 0; r < s.Size; r++)
+            {
+                for (int c = 0; c < s.Size; c++)
+                {
+                    if (s.Board.GetMark(r, c) != PlayerMark.Hint) continue;
+                    if (!s.SolutionCells.Contains((r, c))) continue;
+
+                    var result = new HintResult
+                    {
+                        Step = HintStep.RemoveWrongMark,
+                        Message = "You've marked the wrong lotus leaf! Tap to remove the X.",
+                        ColorIndex = s.Level.GetCell(r, c).ColorIndex,
+                        RemoveMarkCell = (r, c),
+                    };
+                    result.FocusCells.Add((r, c));
+                    return result;
+                }
+            }
+            return null;
+        }
+
+        private static HintResult TryExcludeAroundCharacter(Snapshot s)
+        {
+            foreach (CharacterPlacement cat in s.PlacedCharacters)
+            {
+                List<(int, int)> zone = CollectEmptyZone(s, cat.Row, cat.Col);
+                if (zone.Count == 0) continue;
+
+                var result = new HintResult
+                {
+                    Step = HintStep.ExcludeAroundCharacter,
+                    Message = "This frog's row, column and neighbors can't have other frogs — exclude them.",
+                    ColorIndex = cat.ColorIndex,
+                };
+                result.FocusCells.Add((cat.Row, cat.Col));
+                result.ExcludeCells.AddRange(zone);
+                return result;
+            }
+
+            foreach (CharacterPlacement cat in s.PlacedCharacters)
+            {
+                if (cat.ColorIndex < 0 || cat.ColorIndex >= s.ColorCount) continue;
+                List<(int Row, int Col)> sameColor = s.ColorEmpties[cat.ColorIndex];
+                if (sameColor.Count == 0) continue;
+
+                var result = new HintResult
+                {
+                    Step = HintStep.ExcludeAroundCharacter,
+                    Message = "Only one frog per color.",
+                    ColorIndex = cat.ColorIndex,
+                };
+                result.FocusCells.Add((cat.Row, cat.Col));
+                result.ExcludeCells.AddRange(sameColor);
+                return result;
+            }
+
+            return null;
+        }
+
+        private static List<(int, int)> CollectEmptyZone(Snapshot s, int row, int col)
+        {
+            var zone = new List<(int, int)>();
+            var seen = new HashSet<(int, int)>();
+
+            for (int c = 0; c < s.Size; c++)
+                AddIfEmpty(s, zone, seen, row, c);
+            for (int r = 0; r < s.Size; r++)
+                AddIfEmpty(s, zone, seen, r, col);
+            for (int dr = -1; dr <= 1; dr++)
+                for (int dc = -1; dc <= 1; dc++)
+                    AddIfEmpty(s, zone, seen, row + dr, col + dc);
+
+            return zone;
+        }
+
+        private static void AddIfEmpty(Snapshot s, List<(int, int)> zone, HashSet<(int, int)> seen, int row, int col)
+        {
+            if (row < 0 || row >= s.Size || col < 0 || col >= s.Size) return;
+            if (!s.IsEmpty(row, col)) return;
+            if (!seen.Add((row, col))) return;
+            zone.Add((row, col));
+        }
+
+        private static HintResult TryLastCellInColor(Snapshot s)
+        {
+            bool found = false;
             sbyte bestColor = -1;
             (int Row, int Col) bestCell = default;
-            bool found = false;
-            foreach (var kvp in byColor)
+
+            for (sbyte color = 0; color < s.ColorCount; color++)
             {
-                if (kvp.Value.Count != 1) continue;
-                if (!unrevealedCatCells.Contains(kvp.Value[0])) continue;
-                if (!found || kvp.Key < bestColor)
+                if (s.ColorHasCharacter[color]) continue;
+                if (s.ColorEmpties[color].Count != 1) continue;
+
+                (int Row, int Col) cell = s.ColorEmpties[color][0];
+                if (!s.SolutionCells.Contains(cell)) continue;
+
+                if (!found || IsEarlier(cell, bestCell))
                 {
                     found = true;
-                    bestColor = kvp.Key;
-                    bestCell = kvp.Value[0];
+                    bestColor = color;
+                    bestCell = cell;
                 }
             }
 
             if (!found) return null;
-            return new HintResult(new[] { bestCell }, bestColor, HintReason.SingleCell, HintMessages.SingleCell);
+
+            var result = new HintResult
+            {
+                Step = HintStep.LastCellInColor,
+                Message = $"{HintColorNames.Get(bestColor)} — only one cell left for a frog.",
+                ColorIndex = bestColor,
+                PlaceCell = bestCell,
+            };
+            result.FocusCells.Add(bestCell);
+            return result;
         }
 
-        private static HintResult TryLines(
-            List<(int Row, int Col, sbyte Color)> candidates,
-            List<CharacterPlacement> unrevealedCats,
-            HashSet<(int, int)> unrevealedCatCells,
-            IReadOnlyCollection<sbyte> hintedColors)
+        private static bool IsEarlier((int Row, int Col) a, (int Row, int Col) b) =>
+            a.Row < b.Row || (a.Row == b.Row && a.Col < b.Col);
+
+        private static HintResult TryLastCellInLine(Snapshot s)
         {
-            var rowResult = BestLine(candidates, unrevealedCats, unrevealedCatCells, hintedColors, byRow: true);
-            if (rowResult.HasValue)
+            for (int r = 0; r < s.Size; r++)
             {
-                if (rowResult.Value.Cells.Count != 1)
-                    return ToLineHint(rowResult.Value, byRow: true);
+                if (s.RowHasCharacter[r]) continue;
+                if (s.RowEmpties[r].Count != 1) continue;
+                (int Row, int Col) cell = s.RowEmpties[r][0];
+                if (!s.SolutionCells.Contains(cell)) continue;
+                return LastCellInLineResult(s, cell, $"Only one lotus leaf is left in Row {r + 1}.");
             }
 
-            var colResult = BestLine(candidates, unrevealedCats, unrevealedCatCells, hintedColors, byRow: false);
-            if (colResult.HasValue)
+            for (int c = 0; c < s.Size; c++)
             {
-                if (colResult.Value.Cells.Count != 1)
-                    return ToLineHint(colResult.Value, byRow: false);
+                if (s.ColHasCharacter[c]) continue;
+                if (s.ColEmpties[c].Count != 1) continue;
+                (int Row, int Col) cell = s.ColEmpties[c][0];
+                if (!s.SolutionCells.Contains(cell)) continue;
+                return LastCellInLineResult(s, cell, $"Only one lotus leaf is left in Column {c + 1}.");
             }
 
             return null;
         }
 
-        private struct LineSelection
+        private static HintResult LastCellInLineResult(Snapshot s, (int Row, int Col) cell, string message)
         {
-            public List<(int Row, int Col)> Cells;
-            public sbyte Color;
-            public bool SingleColor;
+            var result = new HintResult
+            {
+                Step = HintStep.LastCellInLine,
+                Message = message,
+                ColorIndex = s.Level.GetCell(cell.Row, cell.Col).ColorIndex,
+                PlaceCell = cell,
+            };
+            result.FocusCells.Add(cell);
+            return result;
         }
 
-        private struct LineRank
+        private static HintResult TryColorLineLock(Snapshot s)
         {
-            public int Key;
-            public bool SingleColor;
-            public int Score;
-            public List<(int Row, int Col, sbyte Color)> Cells;
-        }
-
-        private static LineSelection? BestLine(
-            List<(int Row, int Col, sbyte Color)> candidates,
-            List<CharacterPlacement> unrevealedCats,
-            HashSet<(int, int)> unrevealedCatCells,
-            IReadOnlyCollection<sbyte> hintedColors,
-            bool byRow)
-        {
-            var relevantLines = new HashSet<int>();
-            foreach (CharacterPlacement cat in unrevealedCats)
-                relevantLines.Add(byRow ? cat.Row : cat.Col);
-
-            var byLine = new Dictionary<int, List<(int Row, int Col, sbyte Color)>>();
-            foreach (var cand in candidates)
+            for (sbyte color = 0; color < s.ColorCount; color++)
             {
-                int key = byRow ? cand.Row : cand.Col;
-                if (!relevantLines.Contains(key)) continue;
-                if (!byLine.TryGetValue(key, out var list))
+                if (s.ColorHasCharacter[color]) continue;
+                List<(int Row, int Col)> empties = s.ColorEmpties[color];
+                if (empties.Count < 2) continue;
+
+                if (AllSameRow(empties, out int row))
                 {
-                    list = new List<(int, int, sbyte)>();
-                    byLine[key] = list;
+                    List<(int, int)> exclude = OtherColorEmptiesInRow(s, row, color);
+                    if (exclude.Count > 0)
+                        return ColorLineLockResult(s, color, empties, exclude,
+                            $"{HintColorNames.Get(color)} candidates all in Row {row + 1} — exclude other colors.");
                 }
-                list.Add(cand);
+                else if (AllSameCol(empties, out int col))
+                {
+                    List<(int, int)> exclude = OtherColorEmptiesInCol(s, col, color);
+                    if (exclude.Count > 0)
+                        return ColorLineLockResult(s, color, empties, exclude,
+                            $"{HintColorNames.Get(color)} candidates all in Column {col + 1} — exclude other colors.");
+                }
             }
 
-            var ranked = new List<LineRank>();
-            foreach (var kvp in byLine)
+            for (int r = 0; r < s.Size; r++)
             {
-                var lineCands = kvp.Value;
-                if (lineCands.Count == 0) continue;
+                if (s.RowHasCharacter[r]) continue;
+                List<(int Row, int Col)> empties = s.RowEmpties[r];
+                if (empties.Count < 2) continue;
+                if (!AllSameColor(s, empties, out sbyte color)) continue;
 
-                var colorCounts = new Dictionary<sbyte, int>();
-                foreach (var cand in lineCands)
-                {
-                    colorCounts.TryGetValue(cand.Color, out int count);
-                    colorCounts[cand.Color] = count + 1;
-                }
+                var exclude = new List<(int, int)>();
+                foreach ((int Row, int Col) cell in s.ColorEmpties[color])
+                    if (cell.Row != r) exclude.Add(cell);
+                if (exclude.Count == 0) continue;
 
-                bool singleColor = colorCounts.Count == 1;
-                int score = 0;
-                foreach (var pair in colorCounts)
-                    if (pair.Value > score) score = pair.Value;
-
-                ranked.Add(new LineRank { Key = kvp.Key, SingleColor = singleColor, Score = score, Cells = lineCands });
+                return ColorLineLockResult(s, color, empties, exclude,
+                    $"Row {r + 1} candidates all belong to {HintColorNames.Get(color)} — exclude other rows.");
             }
 
-            if (ranked.Count == 0) return null;
-
-            ranked.Sort(CompareLineRank);
-
-            foreach (LineRank line in ranked)
+            for (int c = 0; c < s.Size; c++)
             {
-                LineSelection? selection = BuildLineSelection(line, unrevealedCatCells, hintedColors);
-                if (selection.HasValue) return selection;
+                if (s.ColHasCharacter[c]) continue;
+                List<(int Row, int Col)> empties = s.ColEmpties[c];
+                if (empties.Count < 2) continue;
+                if (!AllSameColor(s, empties, out sbyte color)) continue;
+
+                var exclude = new List<(int, int)>();
+                foreach ((int Row, int Col) cell in s.ColorEmpties[color])
+                    if (cell.Col != c) exclude.Add(cell);
+                if (exclude.Count == 0) continue;
+
+                return ColorLineLockResult(s, color, empties, exclude,
+                    $"Column {c + 1} candidates all belong to {HintColorNames.Get(color)} — exclude other columns.");
             }
 
             return null;
         }
 
-        private static int CompareLineRank(LineRank a, LineRank b)
+        private static HintResult ColorLineLockResult(Snapshot s, sbyte color,
+            List<(int Row, int Col)> focus, List<(int, int)> exclude, string message)
         {
-            if (a.SingleColor != b.SingleColor) return a.SingleColor ? -1 : 1;
-            if (a.Score != b.Score) return b.Score - a.Score;
-            return a.Key - b.Key;
+            var result = new HintResult
+            {
+                Step = HintStep.ColorLineLock,
+                Message = message,
+                ColorIndex = color,
+            };
+            result.FocusCells.AddRange(focus);
+            result.ExcludeCells.AddRange(exclude);
+            return result;
         }
 
-        private static LineSelection? BuildLineSelection(
-            LineRank line,
-            HashSet<(int, int)> unrevealedCatCells,
-            IReadOnlyCollection<sbyte> hintedColors)
+        private static bool AllSameRow(List<(int Row, int Col)> cells, out int row)
         {
-            if (line.SingleColor)
+            row = cells[0].Row;
+            foreach ((int Row, int Col) cell in cells)
+                if (cell.Row != row) return false;
+            return true;
+        }
+
+        private static bool AllSameCol(List<(int Row, int Col)> cells, out int col)
+        {
+            col = cells[0].Col;
+            foreach ((int Row, int Col) cell in cells)
+                if (cell.Col != col) return false;
+            return true;
+        }
+
+        private static bool AllSameColor(Snapshot s, List<(int Row, int Col)> cells, out sbyte color)
+        {
+            color = s.Level.GetCell(cells[0].Row, cells[0].Col).ColorIndex;
+            foreach ((int Row, int Col) cell in cells)
+                if (s.Level.GetCell(cell.Row, cell.Col).ColorIndex != color) return false;
+            return color >= 0;
+        }
+
+        private static List<(int, int)> OtherColorEmptiesInRow(Snapshot s, int row, sbyte color)
+        {
+            var list = new List<(int, int)>();
+            foreach ((int Row, int Col) cell in s.RowEmpties[row])
+                if (s.Level.GetCell(cell.Row, cell.Col).ColorIndex != color) list.Add(cell);
+            return list;
+        }
+
+        private static List<(int, int)> OtherColorEmptiesInCol(Snapshot s, int col, sbyte color)
+        {
+            var list = new List<(int, int)>();
+            foreach ((int Row, int Col) cell in s.ColEmpties[col])
+                if (s.Level.GetCell(cell.Row, cell.Col).ColorIndex != color) list.Add(cell);
+            return list;
+        }
+
+        private static HintResult TryGroupLock(Snapshot s)
+        {
+            HintResult byRows = TryGroupLockAxis(s, byRow: true);
+            if (byRows != null) return byRows;
+            return TryGroupLockAxis(s, byRow: false);
+        }
+
+        private static HintResult TryGroupLockAxis(Snapshot s, bool byRow)
+        {
+            var colors = new List<sbyte>();
+            var colorLines = new Dictionary<sbyte, HashSet<int>>();
+
+            for (sbyte color = 0; color < s.ColorCount; color++)
             {
-                var cells = new List<(int, int)>();
-                foreach (var cand in line.Cells)
-                    cells.Add((cand.Row, cand.Col));
-                if (!ContainsCat(cells, unrevealedCatCells)) return null;
-                return new LineSelection { SingleColor = true, Cells = cells, Color = line.Cells[0].Color };
+                if (s.ColorHasCharacter[color]) continue;
+                if (s.ColorEmpties[color].Count == 0) continue;
+
+                var lines = new HashSet<int>();
+                foreach ((int Row, int Col) cell in s.ColorEmpties[color])
+                    lines.Add(byRow ? cell.Row : cell.Col);
+
+                if (lines.Count > MaxGroupSize) continue;
+                colors.Add(color);
+                colorLines[color] = lines;
             }
 
-            var filtered = new List<(int Row, int Col, sbyte Color)>();
-            foreach (var cand in line.Cells)
+            for (int groupSize = 2; groupSize <= MaxGroupSize; groupSize++)
             {
-                if (hintedColors != null && hintedColors.Contains(cand.Color)) continue;
-                filtered.Add(cand);
+                HintResult result = SearchGroups(s, colors, colorLines, groupSize, byRow,
+                    new List<sbyte>(), new HashSet<int>(), 0);
+                if (result != null) return result;
             }
-            if (filtered.Count == 0) filtered = line.Cells;
 
-            if (!ContainsCatCandidates(filtered, unrevealedCatCells))
-                filtered = line.Cells;
+            return null;
+        }
 
-            if (!ContainsCatCandidates(filtered, unrevealedCatCells))
-                return null;
-
-            var counts = new Dictionary<sbyte, int>();
-            foreach (var cand in filtered)
+        private static HintResult SearchGroups(Snapshot s, List<sbyte> colors,
+            Dictionary<sbyte, HashSet<int>> colorLines, int groupSize, bool byRow,
+            List<sbyte> chosen, HashSet<int> unionLines, int startIndex)
+        {
+            if (chosen.Count == groupSize)
             {
-                counts.TryGetValue(cand.Color, out int count);
-                counts[cand.Color] = count + 1;
+                if (unionLines.Count != groupSize) return null;
+                return BuildGroupLockResult(s, chosen, unionLines, byRow);
             }
-            sbyte dominant = filtered[0].Color;
-            int dominantCount = -1;
-            foreach (var kvp in counts)
+
+            for (int i = startIndex; i < colors.Count; i++)
             {
-                if (kvp.Value > dominantCount || (kvp.Value == dominantCount && kvp.Key < dominant))
+                sbyte color = colors[i];
+                var merged = new HashSet<int>(unionLines);
+                merged.UnionWith(colorLines[color]);
+                if (merged.Count > groupSize) continue;
+
+                chosen.Add(color);
+                HintResult result = SearchGroups(s, colors, colorLines, groupSize, byRow, chosen, merged, i + 1);
+                if (result != null) return result;
+                chosen.RemoveAt(chosen.Count - 1);
+            }
+
+            return null;
+        }
+
+        private static HintResult BuildGroupLockResult(Snapshot s, List<sbyte> chosen,
+            HashSet<int> unionLines, bool byRow)
+        {
+            var chosenSet = new HashSet<sbyte>(chosen);
+            var focus = new List<(int, int)>();
+            var exclude = new List<(int, int)>();
+
+            foreach (int line in unionLines)
+            {
+                List<(int Row, int Col)> lineEmpties = byRow ? s.RowEmpties[line] : s.ColEmpties[line];
+                foreach ((int Row, int Col) cell in lineEmpties)
                 {
-                    dominantCount = kvp.Value;
-                    dominant = kvp.Key;
+                    sbyte cellColor = s.Level.GetCell(cell.Row, cell.Col).ColorIndex;
+                    if (chosenSet.Contains(cellColor)) focus.Add(cell);
+                    else exclude.Add(cell);
                 }
             }
 
-            var resultCells = new List<(int, int)>();
-            foreach (var cand in filtered)
-                resultCells.Add((cand.Row, cand.Col));
-            return new LineSelection { SingleColor = false, Cells = resultCells, Color = dominant };
+            if (exclude.Count == 0) return null;
+
+            string axis = byRow ? "rows" : "columns";
+            var result = new HintResult
+            {
+                Step = HintStep.GroupLock,
+                Message = $"{chosen.Count} colors share {chosen.Count} {axis} — exclude other lotus leaves in these {chosen.Count} {axis}.",
+            };
+            result.FocusCells.AddRange(focus);
+            result.ExcludeCells.AddRange(exclude);
+            return result;
         }
 
-        private static bool ContainsCatCandidates(
-            List<(int Row, int Col, sbyte Color)> cands,
-            HashSet<(int, int)> unrevealedCatCells)
+        private static HintResult TryTrialContradiction(Snapshot s)
         {
-            foreach (var cand in cands)
-                if (unrevealedCatCells.Contains((cand.Row, cand.Col)))
+            foreach ((int Row, int Col) trial in s.AllEmpties)
+            {
+                if (s.SolutionCells.Contains(trial)) continue;
+
+                HashSet<(int, int)> locked = CollectLockedByPlacement(s, trial);
+                HintResult result = FindVictim(s, trial, locked, HintStep.TrialContradiction);
+                if (result != null) return result;
+            }
+            return null;
+        }
+
+        private static HashSet<(int, int)> CollectLockedByPlacement(Snapshot s, (int Row, int Col) trial)
+        {
+            var locked = new HashSet<(int, int)> { trial };
+
+            foreach ((int Row, int Col) cell in s.RowEmpties[trial.Row]) locked.Add(cell);
+            foreach ((int Row, int Col) cell in s.ColEmpties[trial.Col]) locked.Add(cell);
+            for (int dr = -1; dr <= 1; dr++)
+            {
+                for (int dc = -1; dc <= 1; dc++)
+                {
+                    int nr = trial.Row + dr;
+                    int nc = trial.Col + dc;
+                    if (nr < 0 || nr >= s.Size || nc < 0 || nc >= s.Size) continue;
+                    if (s.IsEmpty(nr, nc)) locked.Add((nr, nc));
+                }
+            }
+
+            sbyte trialColor = s.Level.GetCell(trial.Row, trial.Col).ColorIndex;
+            if (trialColor >= 0 && trialColor < s.ColorCount)
+                foreach ((int Row, int Col) cell in s.ColorEmpties[trialColor]) locked.Add(cell);
+
+            return locked;
+        }
+
+        private static HintResult FindVictim(Snapshot s, (int Row, int Col) trial,
+            HashSet<(int, int)> locked, HintStep step)
+        {
+            sbyte trialColor = s.Level.GetCell(trial.Row, trial.Col).ColorIndex;
+            string verb = step == HintStep.TrialContradiction ? "would leave" : "would eventually leave";
+
+            for (sbyte color = 0; color < s.ColorCount; color++)
+            {
+                if (color == trialColor) continue;
+                if (s.ColorHasCharacter[color]) continue;
+                List<(int Row, int Col)> empties = s.ColorEmpties[color];
+                if (empties.Count == 0) continue;
+                if (!AllLocked(empties, locked)) continue;
+
+                return TrialResult(s, trial, step, HintVictimKind.Color, color, empties,
+                    $"A frog here {verb} {HintColorNames.Get(color)} with no lotus leaf — exclude this cell.");
+            }
+
+            for (int r = 0; r < s.Size; r++)
+            {
+                if (r == trial.Row) continue;
+                if (s.RowHasCharacter[r]) continue;
+                List<(int Row, int Col)> empties = s.RowEmpties[r];
+                if (empties.Count == 0) continue;
+                if (!AllLocked(empties, locked)) continue;
+
+                return TrialResult(s, trial, step, HintVictimKind.Row, r, empties,
+                    $"A frog here {verb} Row {r + 1} with no lotus leaf — exclude this cell.");
+            }
+
+            for (int c = 0; c < s.Size; c++)
+            {
+                if (c == trial.Col) continue;
+                if (s.ColHasCharacter[c]) continue;
+                List<(int Row, int Col)> empties = s.ColEmpties[c];
+                if (empties.Count == 0) continue;
+                if (!AllLocked(empties, locked)) continue;
+
+                return TrialResult(s, trial, step, HintVictimKind.Column, c, empties,
+                    $"A frog here {verb} Column {c + 1} with no lotus leaf — exclude this cell.");
+            }
+
+            return null;
+        }
+
+        private static bool AllLocked(List<(int Row, int Col)> cells, HashSet<(int, int)> locked)
+        {
+            foreach ((int Row, int Col) cell in cells)
+                if (!locked.Contains(cell)) return false;
+            return true;
+        }
+
+        private static HintResult TrialResult(Snapshot s, (int Row, int Col) trial, HintStep step,
+            HintVictimKind kind, int victimIndex, List<(int Row, int Col)> victimCells, string message)
+        {
+            var result = new HintResult
+            {
+                Step = step,
+                Message = message,
+                ColorIndex = kind == HintVictimKind.Color ? (sbyte)victimIndex : s.Level.GetCell(trial.Row, trial.Col).ColorIndex,
+                TrialCell = trial,
+                VictimKind = kind,
+                VictimIndex = victimIndex,
+            };
+            result.ExcludeCells.Add(trial);
+            result.VictimCells.AddRange(victimCells);
+            return result;
+        }
+
+        private sealed class Simulation
+        {
+            public readonly Snapshot Source;
+            public readonly HashSet<(int, int)> Empties;
+            public readonly bool[] ColorHasCharacter;
+            public readonly bool[] RowHasCharacter;
+            public readonly bool[] ColHasCharacter;
+
+            public Simulation(Snapshot s)
+            {
+                Source = s;
+                Empties = new HashSet<(int, int)>(s.AllEmpties);
+                ColorHasCharacter = (bool[])s.ColorHasCharacter.Clone();
+                RowHasCharacter = (bool[])s.RowHasCharacter.Clone();
+                ColHasCharacter = (bool[])s.ColHasCharacter.Clone();
+            }
+
+            public void Place(int row, int col)
+            {
+                Snapshot s = Source;
+                RowHasCharacter[row] = true;
+                ColHasCharacter[col] = true;
+                sbyte color = s.Level.GetCell(row, col).ColorIndex;
+                if (color >= 0 && color < s.ColorCount) ColorHasCharacter[color] = true;
+
+                Empties.Remove((row, col));
+                foreach ((int Row, int Col) cell in s.RowEmpties[row]) Empties.Remove(cell);
+                foreach ((int Row, int Col) cell in s.ColEmpties[col]) Empties.Remove(cell);
+                for (int dr = -1; dr <= 1; dr++)
+                    for (int dc = -1; dc <= 1; dc++)
+                        Empties.Remove((row + dr, col + dc));
+                if (color >= 0 && color < s.ColorCount)
+                    foreach ((int Row, int Col) cell in s.ColorEmpties[color]) Empties.Remove(cell);
+            }
+
+            public int CountColorEmpties(sbyte color, out (int Row, int Col) last)
+            {
+                last = default;
+                int count = 0;
+                foreach ((int Row, int Col) cell in Source.ColorEmpties[color])
+                {
+                    if (!Empties.Contains(cell)) continue;
+                    count++;
+                    last = cell;
+                }
+                return count;
+            }
+
+            public int CountRowEmpties(int row, out (int Row, int Col) last)
+            {
+                last = default;
+                int count = 0;
+                foreach ((int Row, int Col) cell in Source.RowEmpties[row])
+                {
+                    if (!Empties.Contains(cell)) continue;
+                    count++;
+                    last = cell;
+                }
+                return count;
+            }
+
+            public int CountColEmpties(int col, out (int Row, int Col) last)
+            {
+                last = default;
+                int count = 0;
+                foreach ((int Row, int Col) cell in Source.ColEmpties[col])
+                {
+                    if (!Empties.Contains(cell)) continue;
+                    count++;
+                    last = cell;
+                }
+                return count;
+            }
+        }
+
+        private static HintResult TryChainContradiction(Snapshot s)
+        {
+            foreach ((int Row, int Col) trial in s.AllEmpties)
+            {
+                if (s.SolutionCells.Contains(trial)) continue;
+
+                HintResult result = SimulateChain(s, trial);
+                if (result != null) return result;
+            }
+            return null;
+        }
+
+        private static HintResult SimulateChain(Snapshot s, (int Row, int Col) trial)
+        {
+            var sim = new Simulation(s);
+            sim.Place(trial.Row, trial.Col);
+            var chain = new List<(int Row, int Col)>();
+
+            for (int depth = 0; depth < MaxChainLength; depth++)
+            {
+                if (TryFindSimContradiction(sim, out HintVictimKind kind, out int index))
+                {
+                    if (chain.Count == 0 && depth == 0) return null;
+                    return ChainResult(s, trial, chain, kind, index);
+                }
+
+                (int Row, int Col) forced = (0, 0);
+                if (!TryFindForcedPlacement(sim, out forced)) return null;
+                sim.Place(forced.Row, forced.Col);
+                chain.Add(forced);
+            }
+
+            if (!TryFindSimContradiction(sim, out HintVictimKind finalKind, out int finalIndex)) return null;
+            return ChainResult(s, trial, chain, finalKind, finalIndex);
+        }
+
+        private static bool TryFindSimContradiction(Simulation sim, out HintVictimKind kind, out int index)
+        {
+            Snapshot s = sim.Source;
+
+            for (sbyte color = 0; color < s.ColorCount; color++)
+            {
+                if (sim.ColorHasCharacter[color]) continue;
+                (int Row, int Col) ignoredColor;
+                if (sim.CountColorEmpties(color, out ignoredColor) == 0)
+                {
+                    kind = HintVictimKind.Color;
+                    index = color;
                     return true;
+                }
+            }
+            for (int r = 0; r < s.Size; r++)
+            {
+                if (sim.RowHasCharacter[r]) continue;
+                (int Row, int Col) ignoredRow;
+                if (sim.CountRowEmpties(r, out ignoredRow) == 0)
+                {
+                    kind = HintVictimKind.Row;
+                    index = r;
+                    return true;
+                }
+            }
+            for (int c = 0; c < s.Size; c++)
+            {
+                if (sim.ColHasCharacter[c]) continue;
+                (int Row, int Col) ignoredCol;
+                if (sim.CountColEmpties(c, out ignoredCol) == 0)
+                {
+                    kind = HintVictimKind.Column;
+                    index = c;
+                    return true;
+                }
+            }
+
+            kind = HintVictimKind.None;
+            index = -1;
             return false;
         }
 
-        private static HintResult ToLineHint(LineSelection selection, bool byRow)
+        private static bool TryFindForcedPlacement(Simulation sim, out (int Row, int Col) forced)
         {
-            HintReason reason;
-            if (byRow)
-                reason = selection.SingleColor ? HintReason.RowSingleColor : HintReason.RowMultiColor;
-            else
-                reason = selection.SingleColor ? HintReason.ColumnSingleColor : HintReason.ColumnMultiColor;
+            Snapshot s = sim.Source;
 
-            return new HintResult(selection.Cells, selection.Color, reason, HintMessages.For(reason));
-        }
-
-        private static HintResult TryCluster(
-            List<(int Row, int Col, sbyte Color)> candidates,
-            HashSet<(int, int)> candidateSet,
-            HashSet<(int, int)> unrevealedCatCells)
-        {
-            var colorAt = new Dictionary<(int, int), sbyte>();
-            foreach (var cand in candidates)
-                colorAt[(cand.Row, cand.Col)] = cand.Color;
-
-            int bestCount = -1;
-            (int Row, int Col, sbyte Color) bestCand = default;
-            List<(int, int)> bestCells = null;
-
-            foreach (var cand in candidates)
+            for (sbyte color = 0; color < s.ColorCount; color++)
             {
-                var clusterCells = new List<(int, int)> { (cand.Row, cand.Col) };
-                for (int dr = -1; dr <= 1; dr++)
+                if (sim.ColorHasCharacter[color]) continue;
+                (int Row, int Col) last;
+                if (sim.CountColorEmpties(color, out last) == 1)
                 {
-                    for (int dc = -1; dc <= 1; dc++)
-                    {
-                        if (dr == 0 && dc == 0) continue;
-                        var pos = (cand.Row + dr, cand.Col + dc);
-                        if (!candidateSet.Contains(pos)) continue;
-                        if (colorAt[pos] != cand.Color) continue;
-                        clusterCells.Add(pos);
-                    }
+                    forced = last;
+                    return true;
                 }
-
-                int count = clusterCells.Count - 1;
-                if (count < 1) continue;
-                if (!ContainsCat(clusterCells, unrevealedCatCells)) continue;
-
-                bool better;
-                if (count > bestCount)
+            }
+            for (int r = 0; r < s.Size; r++)
+            {
+                if (sim.RowHasCharacter[r]) continue;
+                (int Row, int Col) last;
+                if (sim.CountRowEmpties(r, out last) == 1)
                 {
-                    better = true;
+                    forced = last;
+                    return true;
                 }
-                else if (count == bestCount)
+            }
+            for (int c = 0; c < s.Size; c++)
+            {
+                if (sim.ColHasCharacter[c]) continue;
+                (int Row, int Col) last;
+                if (sim.CountColEmpties(c, out last) == 1)
                 {
-                    better = cand.Row < bestCand.Row ||
-                             (cand.Row == bestCand.Row && cand.Col < bestCand.Col);
-                }
-                else
-                {
-                    better = false;
-                }
-
-                if (better)
-                {
-                    bestCount = count;
-                    bestCand = cand;
-                    bestCells = clusterCells;
+                    forced = last;
+                    return true;
                 }
             }
 
-            if (bestCount < 1) return null;
-
-            return new HintResult(bestCells, bestCand.Color, HintReason.Cluster, HintMessages.Cluster);
+            forced = default;
+            return false;
         }
 
-        private static HintResult Exact(
-            List<(int Row, int Col, sbyte Color)> candidates,
-            List<CharacterPlacement> unrevealedCats,
-            HashSet<(int, int)> candidateSet)
+        private static HintResult ChainResult(Snapshot s, (int Row, int Col) trial,
+            List<(int Row, int Col)> chain, HintVictimKind victimKind, int victimIndex)
         {
-            var colorCandidateCount = new Dictionary<sbyte, int>();
-            foreach (var cand in candidates)
+            string victimText;
+            var victimCells = new List<(int Row, int Col)>();
+            switch (victimKind)
             {
-                colorCandidateCount.TryGetValue(cand.Color, out int count);
-                colorCandidateCount[cand.Color] = count + 1;
+                case HintVictimKind.Color:
+                    victimText = HintColorNames.Get(victimIndex);
+                    victimCells.AddRange(s.ColorEmpties[victimIndex]);
+                    break;
+                case HintVictimKind.Row:
+                    victimText = $"Row {victimIndex + 1}";
+                    victimCells.AddRange(s.RowEmpties[victimIndex]);
+                    break;
+                default:
+                    victimText = $"Column {victimIndex + 1}";
+                    victimCells.AddRange(s.ColEmpties[victimIndex]);
+                    break;
             }
 
-            var inCandidates = new List<CharacterPlacement>();
-            foreach (CharacterPlacement cat in unrevealedCats)
-                if (candidateSet.Contains((cat.Row, cat.Col)))
-                    inCandidates.Add(cat);
+            var result = new HintResult
+            {
+                Step = HintStep.ChainContradiction,
+                Message = $"A frog here would eventually leave {victimText} with no lotus leaf — exclude this cell.",
+                ColorIndex = victimKind == HintVictimKind.Color ? (sbyte)victimIndex : s.Level.GetCell(trial.Row, trial.Col).ColorIndex,
+                TrialCell = trial,
+                VictimKind = victimKind,
+                VictimIndex = victimIndex,
+            };
+            result.ExcludeCells.Add(trial);
+            result.VictimCells.AddRange(victimCells);
 
-            List<CharacterPlacement> pool = inCandidates.Count > 0 ? inCandidates : unrevealedCats;
+            int start = chain.Count > 3 ? chain.Count - 3 : 0;
+            for (int i = start; i < chain.Count; i++)
+                result.ChainCells.Add(chain[i]);
 
-            bool found = false;
+            return result;
+        }
+
+        private static HintResult DirectReveal(Snapshot s)
+        {
             CharacterPlacement best = default;
+            bool found = false;
             int bestCount = int.MaxValue;
-            foreach (CharacterPlacement cat in pool)
+
+            foreach (CharacterPlacement cat in s.MissingCharacters)
             {
-                colorCandidateCount.TryGetValue(cat.ColorIndex, out int count);
-                if (!found || count < bestCount || (count == bestCount && cat.ColorIndex < best.ColorIndex))
+                int count = cat.ColorIndex >= 0 && cat.ColorIndex < s.ColorCount
+                    ? s.ColorEmpties[cat.ColorIndex].Count
+                    : int.MaxValue;
+                if (!found || count < bestCount)
                 {
                     found = true;
                     best = cat;
@@ -446,11 +890,17 @@ namespace Cast.Game
                 }
             }
 
-            return new HintResult(
-                new[] { (best.Row, best.Col) },
-                best.ColorIndex,
-                HintReason.Exact,
-                HintMessages.Exact);
+            if (!found) return null;
+
+            var result = new HintResult
+            {
+                Step = HintStep.DirectReveal,
+                Message = "The frog is right here.",
+                ColorIndex = best.ColorIndex,
+                PlaceCell = (best.Row, best.Col),
+            };
+            result.FocusCells.Add((best.Row, best.Col));
+            return result;
         }
     }
 }

@@ -65,7 +65,7 @@ namespace Cast.Game
         public void Refresh()
         {
             if (_profile == null) return;
-            if (_levelLabel != null) _levelLabel.text = $"Level {_profile.ProgressLevel}";
+            if (_levelLabel != null) _levelLabel.text = $"Level {_profile.CurrentLevelId()}";
         }
 
         public override void DidPushEnter(Memory<object> args)
