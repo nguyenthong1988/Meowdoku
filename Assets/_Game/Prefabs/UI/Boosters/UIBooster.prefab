@@ -173,6 +173,7 @@ MonoBehaviour:
   _type: 2
   _icon: {fileID: 5958325004302075012}
   _groupUnlock: {fileID: 8604975583382953205}
+  _groupLock: {fileID: 8196069496691960426}
   _groupBadge: {fileID: 2930652010190823789}
   _groupAds: {fileID: 4406464438282016053}
   _badgeText: {fileID: 7944508585566716054}

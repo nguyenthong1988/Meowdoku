@@ -3,10 +3,14 @@ using CaskFramework.Assets;
 using CaskFramework.Audio;
 using CaskFramework.Core;
 using CaskFramework.Haptic;
+using CaskFramework.Config;
 using CaskFramework.Profile;
+using CaskFramework.Save;
 using CaskFramework.UI;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using CaskFramework.Ads;
+using CaskFramework.Analytics;
 
 namespace Cast.Game
 {
@@ -22,6 +26,10 @@ namespace Cast.Game
             GameRuntime.Register<IAssetManager>(new AssetManager());
             GameRuntime.Register<IProfileService>(new ProfileService());
             GameRuntime.Register<IHapticService>(new HapticService());
+            GameRuntime.Register<ISaveService>(new SaveService());
+            GameRuntime.Register<IConfigService>(new ConfigService());
+
+            FeatureManager.Init(GameRuntime.Context);
 
             var profile = GameRuntime.Get<IProfileService>();
             if (profile != null)

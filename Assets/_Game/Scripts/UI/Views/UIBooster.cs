@@ -12,21 +12,34 @@ namespace Cast.Game
         [SerializeField] private BoosterType _type;
         [SerializeField] private Image _icon;
         [SerializeField] private GameObject _groupUnlock;
+        [SerializeField] private GameObject _groupLock;
         [SerializeField] private GameObject _groupBadge;
         [SerializeField] private GameObject _groupAds;
         [SerializeField] private TextMeshProUGUI _badgeText;
 
         private IBoosterInventory _inventory;
+        private Button _adsButton;
         private bool _unlocked;
 
         public BoosterType Type => _type;
 
-        public void Bind(IGameSession session)
+        public Button AdsButton
+        {
+            get
+            {
+                if (_adsButton == null && _groupAds != null)
+                    _adsButton = _groupAds.GetComponent<Button>();
+                return _adsButton;
+            }
+        }
+
+        public void Bind(IGameSession session, IBoosterInventory inventory)
         {
             if (session == null) return;
 
             Unbind();
             _unlocked = session.IsBoosterUnlocked(_type);
+            _inventory = inventory;
 
             if (_inventory != null)
                 _inventory.CountChanged += OnCountChanged;
@@ -46,7 +59,7 @@ namespace Cast.Game
         {
             if (!_unlocked)
             {
-                ApplyState(interactable: false, showUnlock: true, showBadge: false, showAds: false, iconAlpha: 1f);
+                ApplyState(interactable: false, showBadge: false, showAds: false, iconAlpha: 1f);
                 return;
             }
 
@@ -56,18 +69,19 @@ namespace Cast.Game
             {
                 if (_badgeText != null)
                     _badgeText.text = count.ToString();
-                ApplyState(interactable: true, showUnlock: false, showBadge: true, showAds: false, iconAlpha: 1f);
+                ApplyState(interactable: true, showBadge: true, showAds: false, iconAlpha: 1f);
             }
             else
             {
-                ApplyState(interactable: true, showUnlock: false, showBadge: false, showAds: true, iconAlpha: 0.75f);
+                ApplyState(interactable: true, showBadge: false, showAds: true, iconAlpha: 0.75f);
             }
         }
 
-        private void ApplyState(bool interactable, bool showUnlock, bool showBadge, bool showAds, float iconAlpha)
+        private void ApplyState(bool interactable, bool showBadge, bool showAds, float iconAlpha)
         {
             if (_button != null) _button.interactable = interactable;
-            if (_groupUnlock != null) _groupUnlock.SetActive(showUnlock);
+            if (_groupUnlock != null) _groupUnlock.SetActive(_unlocked);
+            if (_groupLock != null) _groupLock.SetActive(!_unlocked);
             if (_groupBadge != null) _groupBadge.SetActive(showBadge);
             if (_groupAds != null) _groupAds.SetActive(showAds);
 

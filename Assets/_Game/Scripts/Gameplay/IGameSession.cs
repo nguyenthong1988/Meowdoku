@@ -15,6 +15,7 @@ namespace Cast.Game
         int Hearts { get; }
         int HeartsMax { get; }
         int HintsRemaining { get; }
+        float ElapsedTime { get; }
 
         event Action<GamePhase> PhaseChanged;
         event Action<CellChange> CellChanged;
@@ -26,6 +27,8 @@ namespace Cast.Game
 
         void Begin();
 
+        void CheatFinish(bool won);
+
         MoveOutcome Reveal(int row, int col);
         MoveOutcome ToggleHint(int row, int col);
         MoveOutcome SetHint(int row, int col, bool on);
@@ -33,6 +36,7 @@ namespace Cast.Game
         void Restart();
 
         bool AddHeart();
+        bool Revive();
         bool UndoWrong();
         bool RandomReveal();
         bool ClearAllHints();

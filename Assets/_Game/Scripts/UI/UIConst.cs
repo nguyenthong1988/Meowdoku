@@ -6,6 +6,7 @@ namespace Cast.Game
         public const string ViewHome = "ViewHome";
         public const string ViewGameplay = "ViewGameplay";
         public const string ViewResult = "ViewResult";
+        public const string ViewThemeTransition = "ViewThemeTransition";
 
         public const string PopupWin = "PopupWin";
         public const string PopupOutOfMove = "PopupOutOfMove";
@@ -13,5 +14,6 @@ namespace Cast.Game
         public const string PopupIngameSettings = "PopupIngameSettings";
         public const string PopupBoosterHint = "PopupBoosterHint";
         public const string PopupTutorialHint = "PopupTutorialHint";
+        public const string PopupCheat = "PopupCheat";
     }
 }

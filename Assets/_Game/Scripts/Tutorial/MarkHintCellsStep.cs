@@ -12,6 +12,7 @@ namespace Cast.Game
         private readonly string _messageTop;
         private readonly string _messageBot;
         private readonly List<(int Row, int Col)> _contextCells;
+        private readonly bool _keepPopupOpen;
 
         private TutorialManager _manager;
         private PopupTutorialHint _popup;
@@ -21,13 +22,15 @@ namespace Cast.Game
 
         public MarkHintCellsStep(IEnumerable<(int Row, int Col)> cells, (int Row, int Col)? excludedCell,
                                  string messageTop, string messageBot,
-                                 IEnumerable<(int Row, int Col)> contextCells = null)
+                                 IEnumerable<(int Row, int Col)> contextCells = null,
+                                 bool keepPopupOpen = false)
         {
             _cells = new List<(int Row, int Col)>(cells);
             _excludedCell = excludedCell;
             _messageTop = messageTop;
             _messageBot = messageBot;
             _contextCells = contextCells != null ? new List<(int Row, int Col)>(contextCells) : new List<(int Row, int Col)>();
+            _keepPopupOpen = keepPopupOpen;
         }
 
         public override string Message => _messageTop;
@@ -72,6 +75,15 @@ namespace Cast.Game
 
         private async UniTaskVoid ShowPopupAsync(TutorialManager manager)
         {
+            PopupTutorialHint activePopup = manager.ActivePopup;
+            if (activePopup != null)
+            {
+                manager.ActivePopup = null;
+                _popup = activePopup;
+                activePopup.Show(_messageTop, _messageBot, null);
+                return;
+            }
+
             PopupTutorialHint popup = null;
             await manager.Ui.PushPopupAsync<PopupTutorialHint>(UIConst.PopupTutorialHint, onLoad: (_, p) => popup = p);
             if (popup == null) return;
@@ -133,7 +145,16 @@ namespace Cast.Game
         private async UniTaskVoid CompleteAsync()
         {
             Unhighlight(_manager);
-            await ClosePopupAsync(_manager);
+
+            if (_keepPopupOpen)
+            {
+                _manager.ActivePopup = _popup;
+                _popup = null;
+            }
+            else
+            {
+                await ClosePopupAsync(_manager);
+            }
 
             Action onComplete = _onComplete;
             _onComplete = null;

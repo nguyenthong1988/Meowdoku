@@ -12,8 +12,8 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: Skylink Studio
-  productName: Hexa Stack
+  companyName: Cast
+  productName: Croak Duky
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0, g: 0, b: 0, a: 1}
@@ -146,7 +146,7 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
-  bundleVersion: 1.0.3
+  bundleVersion: 1.0.0
   preloadedAssets:
   - {fileID: 11400000, guid: ebaf39a1248264a32b61dbc67a3396aa, type: 2}
   - {fileID: 11400000, guid: c0881976b03b34ab7a248a42fb18105c, type: 2}
@@ -173,7 +173,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.skl.hexa.sort.blast.puzzle
+    Android: com.croakdoku.logic.puzzle
     iPhone: com.skl.hexa.sort.blast.puzzle
   buildNumber:
     Standalone: 0
@@ -834,7 +834,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Android: CASK_DEBUG;USN_USE_ASYNC_METHODS
+    Android: CASK_DEBUG;USN_USE_ASYNC_METHODS;CASK_ADJUST;CASK_MAX_MEDIATION
     EmbeddedLinux: EASY_MOBILE;EASY_MOBILE_PRO;dUI_MANAGER;dUI_TextMeshPro
     GameCoreScarlett: EASY_MOBILE;EASY_MOBILE_PRO;dUI_MANAGER;dUI_TextMeshPro
     GameCoreXboxOne: EASY_MOBILE;EASY_MOBILE_PRO;dUI_MANAGER;dUI_TextMeshPro

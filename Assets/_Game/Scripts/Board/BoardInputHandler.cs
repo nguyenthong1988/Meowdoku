@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using CaskFramework.Core;
+using CaskFramework.Haptic;
 using Cysharp.Threading.Tasks;
 
 namespace Cast.Game
@@ -14,6 +16,8 @@ namespace Cast.Game
         private IGameSession _session;
         private UniTaskCompletionSource<(bool, int, int)> _targetSource;
 
+        private IHapticService _haptic;
+
         private bool _paintModeSet;
         private bool _paintHint;
 
@@ -23,6 +27,8 @@ namespace Cast.Game
         private Action<int, int> _hintPreviewDrag;
 
         public BoardInputMode Mode { get; private set; } = BoardInputMode.Locked;
+
+        private IHapticService Haptic => _haptic ??= GameRuntime.Get<IHapticService>();
 
         public BoardInputHandler(BoardInputReader reader, BoardView board)
         {
@@ -123,14 +129,26 @@ namespace Cast.Game
                     switch (g.Gesture)
                     {
                         case PointerGesture.DoubleTap:
-                            if (_hintPreviewCells.Contains((g.Row, g.Col))) _hintPreviewDoubleTap?.Invoke(g.Row, g.Col);
+                            if (_hintPreviewCells.Contains((g.Row, g.Col)))
+                            {
+                                _hintPreviewDoubleTap?.Invoke(g.Row, g.Col);
+                                Haptic?.Play(HapticType.Success);
+                            }
                             break;
                         case PointerGesture.Tap:
-                            if (_hintPreviewCells.Contains((g.Row, g.Col))) _hintPreviewTap?.Invoke(g.Row, g.Col);
+                            if (_hintPreviewCells.Contains((g.Row, g.Col)))
+                            {
+                                _hintPreviewTap?.Invoke(g.Row, g.Col);
+                                Haptic?.Play(HapticType.Light);
+                            }
                             break;
                         case PointerGesture.DragStart:
                         case PointerGesture.DragMove:
-                            if (_hintPreviewCells.Contains((g.Row, g.Col))) _hintPreviewDrag?.Invoke(g.Row, g.Col);
+                            if (_hintPreviewCells.Contains((g.Row, g.Col)))
+                            {
+                                _hintPreviewDrag?.Invoke(g.Row, g.Col);
+                                Haptic?.Play(HapticType.Soft);
+                            }
                             break;
                     }
                     return;
@@ -139,8 +157,8 @@ namespace Cast.Game
                     if (_session == null) return;
                     switch (g.Gesture)
                     {
-                        case PointerGesture.DoubleTap: _session.Reveal(g.Row, g.Col); break;
-                        case PointerGesture.Tap: _session.ToggleHint(g.Row, g.Col); break;
+                        case PointerGesture.DoubleTap: PlayRevealHaptic(_session.Reveal(g.Row, g.Col)); break;
+                        case PointerGesture.Tap: PlayHintHaptic(_session.ToggleHint(g.Row, g.Col), fromTap: true); break;
                         case PointerGesture.DragStart: _paintModeSet = false; PaintDrag(g.Row, g.Col); break;
                         case PointerGesture.DragMove: PaintDrag(g.Row, g.Col); break;
                         case PointerGesture.DragEnd: _paintModeSet = false; break;
@@ -166,7 +184,22 @@ namespace Cast.Game
                 _paintHint = mark == PlayerMark.None;
             }
 
-            _session.SetHint(row, col, _paintHint);
+            PlayHintHaptic(_session.SetHint(row, col, _paintHint), fromTap: false);
+        }
+
+        private void PlayRevealHaptic(MoveOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case MoveOutcome.Revealed: Haptic?.Play(HapticType.Success); break;
+                case MoveOutcome.Wrong: Haptic?.Play(HapticType.Error); break;
+            }
+        }
+
+        private void PlayHintHaptic(MoveOutcome outcome, bool fromTap)
+        {
+            if (outcome != MoveOutcome.Hinted && outcome != MoveOutcome.Unhinted) return;
+            Haptic?.Play(fromTap ? HapticType.Light : HapticType.Soft);
         }
     }
 }

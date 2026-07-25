@@ -420,7 +420,7 @@ namespace Cast.Game
             color = s.Level.GetCell(cells[0].Row, cells[0].Col).ColorIndex;
             foreach ((int Row, int Col) cell in cells)
                 if (s.Level.GetCell(cell.Row, cell.Col).ColorIndex != color) return false;
-            return color >= 0;
+            return color >= 0 && color < s.ColorCount;
         }
 
         private static List<(int, int)> OtherColorEmptiesInRow(Snapshot s, int row, sbyte color)

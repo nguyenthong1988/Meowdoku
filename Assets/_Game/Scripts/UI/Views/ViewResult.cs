@@ -1,6 +1,7 @@
 
 using Cysharp.Threading.Tasks;
 using LitMotion;
+using LitMotion.Extensions;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -14,13 +15,19 @@ namespace Cast.Game
     public sealed class ViewResult : Page
     {
         [SerializeField] private TextMeshProUGUI _kudoText;
+        [SerializeField] private Image _characterImage;
         [SerializeField] private TextMeshProUGUI _levelText;
         [SerializeField] private Button _nextButton;
+        [SerializeField] private TextMeshProUGUI _timeLabel;
+        [SerializeField] private GameObject _streakGroup;
+        [SerializeField] private TextMeshProUGUI _currentStreakLabel;
+        [SerializeField] private TextMeshProUGUI _bestStreakLabel;
 
         private CanvasGroup _kudoCanvasGroup, _nextButtonCanvasGroup;
         private readonly string[] _kudoTexts = new string[] { "Good!", "Great!", "Awesome!", "Perfect!", "Excellent!" };
         private Action<WinChoice> _onChoice;
         private bool _chosen;
+        private GameMode _gameMode;
 
         public override UniTask Initialize(Memory<object> args)
         {
@@ -29,17 +36,52 @@ namespace Cast.Game
             _kudoCanvasGroup.alpha = 0f;
             _nextButtonCanvasGroup.alpha = 0f;
             _nextButtonCanvasGroup.interactable = false;
+            SetImageAlpha(0f, _characterImage);
             return base.Initialize(args);
         }
 
-        public void Setup(GameResult result, int currentLevelId, Action<WinChoice> onChoice)
+        public void Setup(GameResult result, int currentLevelId, Action<WinChoice> onChoice,
+                          GameMode gameMode = GameMode.Normal, bool themeCompleted = false)
         {
             _onChoice = onChoice;
             _chosen = false;
-            _levelText.text = $"LEVEL {currentLevelId + 1}";
+            _gameMode = gameMode;
+
+            if (_timeLabel != null)
+            {
+                int minutes = (int)(result.Elapsed / 60f);
+                int seconds = (int)(result.Elapsed % 60f);
+                _timeLabel.text = $"{minutes:D2}:{seconds:D2}";
+            }
+
+            bool isDaily = _gameMode == GameMode.DailyChallenge;
+
+            if (_streakGroup != null)
+                _streakGroup.SetActive(isDaily);
+
+            if (isDaily && FeatureManager.TryGet(out DailyChallengeFeature dailyChallenge))
+            {
+                DailyChallengeData data = dailyChallenge.Data;
+                if (_currentStreakLabel != null)
+                    _currentStreakLabel.text = data.CurrentStreak.ToString();
+                if (_bestStreakLabel != null)
+                    _bestStreakLabel.text = data.BestStreak.ToString();
+            }
+
+            bool showNewRealm = themeCompleted && !isDaily;
+            if (_gameMode == GameMode.DailyChallenge)
+                _levelText.text = "DAILY CHALLENGE";
+            else
+                _levelText.text = showNewRealm ? "NEXT" : $"LEVEL {currentLevelId + 1}";
+
 
             _nextButton.onClick.RemoveAllListeners();
-            _nextButton.onClick.AddListener(() => Choose(WinChoice.Next));
+            if (isDaily)
+                _nextButton.onClick.AddListener(() => Choose(WinChoice.Home));
+            else if (showNewRealm)
+                _nextButton.onClick.AddListener(() => Choose(WinChoice.NextTheme));
+            else
+                _nextButton.onClick.AddListener(() => Choose(WinChoice.Next));
 
             GameRuntime.Get<IAudioManager>().PlaySfx(AudioNames.SFX_WINNING);
 
@@ -72,7 +114,7 @@ namespace Cast.Game
 
             PlayWinConfetti();
 
-            await UniTask.Delay(TimeSpan.FromSeconds(1f));
+            await RunCharacterRevealAsync();
 
             _nextButton.transform.localScale = Vector3.one * 0.65f;
 
@@ -85,6 +127,39 @@ namespace Cast.Game
             await UniTask.WhenAll(btnScaleMotion.ToUniTask(), btnAlphaMotion.ToUniTask());
 
             _nextButtonCanvasGroup.interactable = true;
+        }
+
+        private async UniTask RunCharacterRevealAsync()
+        {
+            float revealDuration = 0.35f;
+            _characterImage.transform.localScale = Vector3.one * 1.5f;
+            SetImageAlpha(0.35f, _characterImage);
+
+            var characterScaleMotion = LMotion.Create(Vector3.one * 1.5f, Vector3.one * 2f, revealDuration)
+                .WithEase(Ease.OutQuad)
+                .BindToLocalScale(_characterImage.transform);
+
+            var characterAlphaMotion = LMotion.Create(0.35f, 1f, revealDuration)
+                .Bind(_characterImage, SetImageAlpha);
+
+            await UniTask.WhenAll(characterScaleMotion.ToUniTask(), characterAlphaMotion.ToUniTask());
+
+            float rockStageDuration = 0.08f;
+            var rockMotion = LSequence.Create()
+                .Append(LMotion.Create(0f, -12f, rockStageDuration).WithEase(Ease.InOutSine).BindToLocalEulerAnglesZ(_characterImage.transform))
+                .Append(LMotion.Create(-12f, 12f, rockStageDuration * 2f).WithEase(Ease.InOutSine).BindToLocalEulerAnglesZ(_characterImage.transform))
+                .Append(LMotion.Create(12f, -6f, rockStageDuration * 1.5f).WithEase(Ease.InOutSine).BindToLocalEulerAnglesZ(_characterImage.transform))
+                .Append(LMotion.Create(-6f, 0f, rockStageDuration).WithEase(Ease.InOutSine).BindToLocalEulerAnglesZ(_characterImage.transform))
+                .Run();
+
+            await rockMotion.ToUniTask();
+        }
+
+        private static void SetImageAlpha(float alpha, Image image)
+        {
+            Color color = image.color;
+            color.a = alpha;
+            image.color = color;
         }
 
         private void PlayWinConfetti()

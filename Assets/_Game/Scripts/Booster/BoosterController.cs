@@ -16,6 +16,7 @@ namespace Cast.Game
         public IBoardInput Input => _input;
         public IUIManager Ui { get; }
         public bool IsBusy { get; private set; }
+        public IBoosterInventory Inventory => _inventory;
 
         public event Action<BoosterType> BoosterStarted;
         public event Action<BoosterResult> BoosterFinished;

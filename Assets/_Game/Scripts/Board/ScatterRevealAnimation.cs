@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
+using CaskFramework.Audio;
+using CaskFramework.Core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -31,6 +33,9 @@ namespace Cast.Game
 
             IReadOnlyList<CellView> ordered = Order(cells);
 
+            const float sfxInterval = 0.06f;
+            GameRuntime.TryGet(out IAudioManager audio);
+
             float maxEnd = 0f;
             for (int i = 0; i < ordered.Count; i++)
             {
@@ -41,13 +46,30 @@ namespace Cast.Game
                 maxEnd = Mathf.Max(maxEnd, delay + _config.CellDuration);
             }
 
-            if (maxEnd > 0f)
+            if (audio != null && ordered.Count > 0)
+            {
+                float elapsed = 0f;
+                float nextSfxTime = 0f;
+                while (elapsed < maxEnd)
+                {
+                    if (ct.IsCancellationRequested) return;
+                    if (elapsed >= nextSfxTime)
+                    {
+                        audio.PlaySfx(AudioNames.SFX_SPREAD_TILE);
+                        nextSfxTime = elapsed + sfxInterval;
+                    }
+                    await UniTask.NextFrame(ct);
+                    elapsed += Time.deltaTime;
+                }
+            }
+            else if (maxEnd > 0f)
+            {
                 await UniTask.Delay(Mathf.CeilToInt(maxEnd * 1000f), cancellationToken: ct);
+            }
         }
 
         private IReadOnlyList<CellView> Order(IReadOnlyList<CellView> cells)
         {
-            
             if (_config.Order != RevealOrder.Random) return cells;
 
             var copy = new List<CellView>(cells);

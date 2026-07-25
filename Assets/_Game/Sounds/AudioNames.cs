@@ -5,7 +5,10 @@ public static class AudioNames
     public const string SFX_BUTTON_CANCEL_CLICK = "SFX_ButtonCancelClick";
     public const string SFX_BUTTON_CLICK = "SFX_ButtonClick";
     public const string SFX_FAILED = "SFX_Failed";
+    public const string SFX_HINT_SELECT = "SFX_Hint_Select";
+    public const string SFX_HINT_UNSELECT = "SFX_Hint_Unselect";
     public const string SFX_REVEAL_FAILURE = "SFX_RevealFailure";
     public const string SFX_REVEAL_SUCCESS = "SFX_RevealSuccess";
+    public const string SFX_SPREAD_TILE = "SFX_Spread_Tile";
     public const string SFX_WINNING = "SFX_Winning";
 }

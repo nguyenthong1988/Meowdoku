@@ -1,0 +1,42 @@
+pluginManagement {
+    repositories {
+        **ARTIFACTORYREPOSITORY**
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+include ':launcher', ':unityLibrary'
+**INCLUDES**
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        **ARTIFACTORYREPOSITORY**
+        google()
+        mavenCentral()
+// Android Resolver Repos Start
+        def unityProjectPath = $/file:///**DIR_UNITYPROJECT**/$.replace("\\", "/")
+        maven {
+            url "https://verve.jfrog.io/artifactory/verve-gradle-release" // Packages/com.applovin.mediation.adapters.verve.android/Editor/Dependencies.xml:7
+        }
+        maven {
+            url "https://artifactory.bidmachine.io/bidmachine" // Packages/com.applovin.mediation.adapters.bidmachine.android/Editor/Dependencies.xml:8
+        }
+        maven {
+            url "https://cboost.jfrog.io/artifactory/chartboost-ads/" // Packages/com.applovin.mediation.adapters.chartboost.android/Editor/Dependencies.xml:8
+        }
+        maven {
+            url "https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_oversea" // Packages/com.applovin.mediation.adapters.mintegral.android/Editor/Dependencies.xml:8
+        }
+        maven {
+            url (unityProjectPath + "/Assets/GeneratedLocalRepo/Firebase/m2repository") // Packages/com.google.firebase.app/Firebase/Editor/AppDependencies.xml:25, Packages/com.google.firebase.crashlytics/Firebase/Editor/CrashlyticsDependencies.xml:23, Packages/com.google.firebase.remote-config/Firebase/Editor/RemoteConfigDependencies.xml:23, Packages/com.google.firebase.analytics/Firebase/Editor/AnalyticsDependencies.xml:21
+        }
+        mavenLocal()
+// Android Resolver Repos End
+        flatDir {
+            dirs "${project(':unityLibrary').projectDir}/libs"
+        }
+    }
+}

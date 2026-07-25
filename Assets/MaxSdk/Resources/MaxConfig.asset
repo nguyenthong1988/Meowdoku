@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8522c964b40645ed98f3ff5b533df086, type: 3}
+  m_Name: MaxConfig
+  m_EditorClassIdentifier: CaskFramework::CaskFramework.Ads.MaxConfig
+  _isManualLoad: 1
+  _iosBanner: 
+  _iosInterstitial: 
+  _iosRewarded: 
+  _iosAppOpen: 
+  _iosNative: 
+  _androidBanner: 348c8af9c189c3e8
+  _androidInterstitial: 3bf0af4c875ea72f
+  _androidRewarded: 0c8447d75ebc4bd6
+  _androidAppOpen: 751ba490a1aceccb
+  _androidNative: cdb403333540a00e

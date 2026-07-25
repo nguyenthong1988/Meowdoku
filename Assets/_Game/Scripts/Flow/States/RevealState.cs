@@ -1,5 +1,7 @@
 using System;
 using System.Threading;
+using CaskFramework.Audio;
+using CaskFramework.Core;
 using CaskFramework.Profile;
 using Cysharp.Threading.Tasks;
 
@@ -11,12 +13,18 @@ namespace Cast.Game
         private readonly BoardView _board;
         private readonly IProfileService _profile;
         private CancellationTokenSource _cts;
+        private GameMode _gameMode = GameMode.Normal;
 
         public RevealState(GameStateMachine machine, BoardView board, IProfileService profile)
         {
             _machine = machine;
             _board = board;
             _profile = profile;
+        }
+
+        public void SetGameMode(GameMode mode)
+        {
+            _gameMode = mode;
         }
 
         public void Enter()
@@ -46,10 +54,13 @@ namespace Cast.Game
 
             if (ct.IsCancellationRequested) return;
 
+            GameMode mode = _gameMode;
+            _gameMode = GameMode.Normal;
+
             if (_profile.ShouldRunFtue())
                 _machine.ChangeState<FtueState>();
             else
-                _machine.ChangeState<PlayState>();
+                _machine.ChangeState<PlayState>(s => s.SetGameMode(mode));
         }
     }
 }

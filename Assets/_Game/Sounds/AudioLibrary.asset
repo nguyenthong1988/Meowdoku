@@ -27,3 +27,9 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: ffa710d30568247a3b06bff67d07e778, type: 3}
   - key: BGM_Background
     clip: {fileID: 8300000, guid: cf825f4a3a832471c837902fa4364004, type: 3}
+  - key: SFX_Hint_Select
+    clip: {fileID: 8300000, guid: d79276bd9da894d42b7eb13f28904e20, type: 3}
+  - key: SFX_Hint_Unselect
+    clip: {fileID: 8300000, guid: cf757a10bb8924f3db30ef3713e2cf0c, type: 3}
+  - key: SFX_Spread_Tile
+    clip: {fileID: 8300000, guid: 956cbf3cabd4d4a648d6f84f469653d8, type: 3}

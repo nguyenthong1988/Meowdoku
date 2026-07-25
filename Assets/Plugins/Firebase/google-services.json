@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "210334593893",
+    "project_id": "mini-games-pu-gp-65",
+    "storage_bucket": "mini-games-pu-gp-65.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:210334593893:android:c8f249d4700abeeec4a78c",
+        "android_client_info": {
+          "package_name": "com.croakdoku.logic.puzzle"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSKvKO1mweG5kiCo5tc9I7Yqbrj4YM8qw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

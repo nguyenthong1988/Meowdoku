@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@string/gcm_defaultSenderId,@string/google_storage_bucket,@string/project_id,@string/google_api_key,@string/google_crash_reporting_api_key,@string/google_app_id">
+  <string name="gcm_defaultSenderId" translatable="false">210334593893</string>
+  <string name="google_storage_bucket" translatable="false">mini-games-pu-gp-65.firebasestorage.app</string>
+  <string name="project_id" translatable="false">mini-games-pu-gp-65</string>
+  <string name="google_api_key" translatable="false">AIzaSyDSKvKO1mweG5kiCo5tc9I7Yqbrj4YM8qw</string>
+  <string name="google_crash_reporting_api_key" translatable="false">AIzaSyDSKvKO1mweG5kiCo5tc9I7Yqbrj4YM8qw</string>
+  <string name="google_app_id" translatable="false">1:210334593893:android:c8f249d4700abeeec4a78c</string>
+</resources>

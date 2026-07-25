@@ -1,0 +1,9 @@
+{
+    "Themes": [
+        { "Name": "Realm 1", "Level": 1, "Background": "background_1", "LotusPool": "lotus_pool_1" },
+        { "Name": "Realm 2", "Level": 4, "Background": "background_2", "LotusPool": "lotus_pool_2" },
+        { "Name": "Realm 3", "Level": 8, "Background": "background_3", "LotusPool": "lotus_pool_3" },
+        { "Name": "Realm 4", "Level": 15, "Background": "background_4", "LotusPool": "lotus_pool_4" }
+    ],
+    "RepeatingLevelCount": 15
+}

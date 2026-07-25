@@ -26,6 +26,7 @@ namespace Cast.Game
 
         private CanvasGroup _contentTopCanvasGroup;
         private CanvasGroup _contentBotCanvasGroup;
+        private Button _botButton;
 
         public bool Applied { get; private set; }
 
@@ -33,6 +34,16 @@ namespace Cast.Game
         {
             _contentTopCanvasGroup = GetOrAddCanvasGroup(_contentTop);
             _contentBotCanvasGroup = GetOrAddCanvasGroup(_contentBot);
+            if (_contentBot != null)
+                _botButton = _contentBot.GetComponent<Button>();
+        }
+
+        public void SetBotButtonCallback(Action onClick)
+        {
+            if (_botButton == null) return;
+            _botButton.onClick.RemoveAllListeners();
+            if (onClick != null)
+                _botButton.onClick.AddListener(() => onClick());
         }
 
         public void Show(string messageTop, string messageBot, Action onConfirm)

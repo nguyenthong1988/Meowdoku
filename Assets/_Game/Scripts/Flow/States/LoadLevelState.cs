@@ -1,3 +1,6 @@
+using CaskFramework.Ads;
+using CaskFramework.Audio;
+using CaskFramework.Core;
 using CaskFramework.Profile;
 using CaskFramework.UI;
 using Cysharp.Threading.Tasks;
@@ -16,11 +19,17 @@ namespace Cast.Game
         private readonly IBoosterController _boosters;
         private readonly IProfileService _profile;
         private readonly GameplayViewRef _gameplayViewRef;
+        private readonly AdFeature _ads;
+        private readonly DailyChallengeFeature _dailyChallenge;
+
+        private AdPosition _entryType = AdPosition.NormalStart;
+        private GameMode _gameMode = GameMode.Normal;
 
         public LoadLevelState(GameStateMachine machine, IUIManager ui, ILevelDataReader reader,
                               BoardView board, IGameSession session, BoardInputHandler interaction,
                               IBoosterController boosters, IProfileService profile,
-                              GameplayViewRef gameplayViewRef)
+                              GameplayViewRef gameplayViewRef, AdFeature ads,
+                              DailyChallengeFeature dailyChallenge)
         {
             _machine = machine;
             _ui = ui;
@@ -31,6 +40,18 @@ namespace Cast.Game
             _boosters = boosters;
             _profile = profile;
             _gameplayViewRef = gameplayViewRef;
+            _ads = ads;
+            _dailyChallenge = dailyChallenge;
+        }
+
+        public void SetEntryType(AdPosition entryType)
+        {
+            _entryType = entryType;
+        }
+
+        public void SetGameMode(GameMode mode)
+        {
+            _gameMode = mode;
         }
 
         public void Enter()
@@ -44,7 +65,16 @@ namespace Cast.Game
 
         private async UniTaskVoid LoadAsync()
         {
-            int levelId = _profile.CurrentLevelId();
+            if (_ads.ShouldShowInterstitial(_entryType))
+                await _ads.ShowInterstitialAsync();
+
+            _entryType = AdPosition.NormalStart;
+            GameMode currentMode = _gameMode;
+            _gameMode = GameMode.Normal;
+
+            int levelId = currentMode == GameMode.DailyChallenge
+                ? _dailyChallenge.GetDailyLevelId()
+                : _profile.CurrentLevelId();
 
             LevelReadResult read = await _reader.ReadLevelAsync(levelId);
             if (!read.Success)
@@ -58,18 +88,30 @@ namespace Cast.Game
 
             _session.Setup(read.Level);
             await _board.BuildAsync(read.Level);
+            if (FeatureManager.TryGet(out ThemeFeature theme))
+                await UniTask.WhenAll(_board.ApplyThemeAsync(levelId), theme.ApplyThemeAsync(levelId));
+            else
+                await _board.ApplyThemeAsync(levelId);
             _board.BindRendering(_session);
             _interaction.Bind(_session);
+
+            if (GameRuntime.TryGet(out IAudioManager audio))
+            {
+                if (audio.IsMusicPaused)
+                    audio.ResumeMusicAsync(0.5f).Forget();
+                else if (!audio.IsPlayingMusic)
+                    audio.PlayMusic(AudioNames.BGM_BACKGROUND, 0.5f);
+            }
 
             if (_gameplayViewRef.View == null)
             {
                 await _ui.PushViewAsync<ViewGameplay>(UIConst.ViewGameplay, stack: false, onLoad: (_, view) => _gameplayViewRef.View = view);
             }
 
-            BindGameplayView();
+            BindGameplayView(currentMode);
         }
 
-        private void BindGameplayView()
+        private void BindGameplayView(GameMode mode)
         {
             _gameplayViewRef.View.Bind(
                 _session,
@@ -78,8 +120,12 @@ namespace Cast.Game
                 _interaction,
                 _ui,
                 onHomeRequested: () => _machine.ChangeState<HomeState>(),
-                onRetryRequested: () => _machine.ChangeState<LoadLevelState>(),
-                onEntryPositioned: () => _machine.ChangeState<RevealState>());
+                onRetryRequested: () => _machine.ChangeState<LoadLevelState>(s =>
+                {
+                    s.SetEntryType(AdPosition.NormalRestart);
+                    s.SetGameMode(mode);
+                }),
+                onEntryPositioned: () => _machine.ChangeState<RevealState>(s => s.SetGameMode(mode)));
         }
     }
 }

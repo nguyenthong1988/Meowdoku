@@ -24,6 +24,9 @@ namespace Cast.Game
         private CellViewPool _pool;
         private IBoardRevealAnimation _reveal;
         private IGameSession _session;
+        private IAssetManager _assets;
+        private string _lotusPoolKey;
+        private float _lotusPoolTarget;
 
         private readonly List<CellView> _cells = new List<CellView>();
         private CellView[,] _grid;
@@ -41,8 +44,35 @@ namespace Cast.Game
 
         public void Configure(IAssetManager assets)
         {
+            _assets = assets;
             _pool = new CellViewPool(assets, _cellAddress);
             _reveal = new ScatterRevealAnimation(_revealConfig);
+        }
+
+        public async UniTask ApplyThemeAsync(int levelNumber)
+        {
+            if (_assets == null) return;
+            if (!FeatureManager.TryGet(out ThemeFeature theme)) return;
+
+            ThemeInfo info = theme.GetThemeInfoForLevel(levelNumber);
+            if (info.LotusPoolKey == _lotusPoolKey) return;
+
+            _lotusPoolKey = info.LotusPoolKey;
+            await LoadThemeSpriteAsync(info.LotusPoolKey, _cellBackground);
+            FitLotusPool();
+        }
+
+        private async UniTask LoadThemeSpriteAsync(string key, SpriteRenderer target)
+        {
+            if (target == null || string.IsNullOrEmpty(key)) return;
+            Sprite sprite = await _assets.GetAssetAsync<Sprite>(key, key);
+            if (sprite != null) target.sprite = sprite;
+        }
+
+        private void FitLotusPool()
+        {
+            if (_cellBackground == null || _lotusPoolTarget <= 0f) return;
+            _cellBackground.size = new Vector2(_lotusPoolTarget, _lotusPoolTarget);
         }
 
         public UniTask PreloadAsync() =>
@@ -64,10 +94,11 @@ namespace Cast.Game
             if (_cellBackground != null)
             {
                 float boardSpan = Layout.Size * Layout.CellSize;
-                _cellBackground.size = new Vector2(boardSpan + 0.75f * _padding, boardSpan + 0.75f * _padding);
+                _lotusPoolTarget = boardSpan + 0.75f * _padding;
                 float cx = Layout.Origin.x + (Layout.Size - 1) * 0.5f * Layout.CellSize;
                 float cy = Layout.Origin.y - (Layout.Size - 1) * 0.5f * Layout.CellSize;
                 _cellBackground.transform.position = new Vector3(cx, cy, _cellBackground.transform.position.z);
+                FitLotusPool();
             }
 
             int i = 0;
@@ -118,6 +149,7 @@ namespace Cast.Game
 
         public void BindRendering(IGameSession session)
         {
+            UnbindRendering();
             _session = session;
             _session.CellChanged += OnCellChanged;
             _session.MoveRejected += OnMoveRejected;

@@ -17,10 +17,14 @@ namespace Cast.Game
         [SerializeField] private TextMeshProUGUI _levelLabel;
         [SerializeField] private Button _playButton;
         [SerializeField] private Button _settingsButton;
+        [SerializeField] private Button _dailyChallengeButton;
+        [SerializeField] private TextMeshProUGUI _streakLabel;
+        [SerializeField] private GameObject _dailyChallengeCompleted;
 
         private const string CoinKey = "coin";
 
         private Action _onPlayClicked;
+        private Action _onDailyChallengeClicked;
         private IProfileService _profile;
         private IUIManager _ui;
 
@@ -36,11 +40,13 @@ namespace Cast.Game
             }
         }
 
-        public void Setup(Action onPlayClicked, IProfileService profile, IUIManager ui = null)
+        public void Setup(Action onPlayClicked, Action onDailyChallengeClicked,
+                          IProfileService profile, IUIManager ui = null)
         {
             GameRuntime.Get<IAudioManager>().PlayMusic(AudioNames.BGM_BACKGROUND, 0.5f);
 
             _onPlayClicked = onPlayClicked;
+            _onDailyChallengeClicked = onDailyChallengeClicked;
             _profile = profile;
             _ui = ui;
 
@@ -53,6 +59,27 @@ namespace Cast.Game
                     _onPlayClicked = null;
                 });
             }
+
+            FeatureManager.TryGet(out DailyChallengeFeature dailyChallenge);
+
+            if (_dailyChallengeButton != null)
+            {
+                _dailyChallengeButton.onClick.RemoveAllListeners();
+                bool available = dailyChallenge != null && dailyChallenge.IsAvailableToday();
+                _dailyChallengeButton.interactable = available;
+
+                if (_dailyChallengeCompleted != null)
+                    _dailyChallengeCompleted.SetActive(!available);
+
+                _dailyChallengeButton.onClick.AddListener(() =>
+                {
+                    _onDailyChallengeClicked?.Invoke();
+                    _onDailyChallengeClicked = null;
+                });
+            }
+
+            if (_streakLabel != null && dailyChallenge != null)
+                _streakLabel.text = dailyChallenge.Data.CurrentStreak.ToString();
 
             if (_settingsButton != null)
             {

@@ -15,6 +15,7 @@ namespace Cast.Game
         private const string StepMessage7 = "Find the frog!";
         private const string StepMessage8 = "Only the last blue lotus leaf remains.\nDouble-tap to place the frog.";
         private const string StepMessage9 = "Find the frog!";
+        private const string StepMessage10 = "Tap here for a hint.";
 
         private readonly GameStateMachine _machine;
         private readonly IGameSession _session;
@@ -71,10 +72,11 @@ namespace Cast.Game
             {
                 new DoubleTapCellStep(cat.Row, cat.Col, StepMessage1),
                 new PopupConfirmStep(StepMessage2),
-                new MarkHintCellsStep(rowColumnCells, (cat.Row, cat.Col), StepMessage3, StepMessage4),
-                new DoubleTapCellStep(secondCell.Row, secondCell.Col, StepMessage5, rowColumnCells),
-                new MarkHintCellsStep(thirdRegionCells, null, StepMessage6, StepMessage7, contextAfterSecondCell),
-                new DoubleTapCellStep(1, 0, StepMessage8, fourthColumnCells)
+                new MarkHintCellsStep(rowColumnCells, (cat.Row, cat.Col), StepMessage3, StepMessage4, keepPopupOpen: true),
+                new DoubleTapCellStep(secondCell.Row, secondCell.Col, StepMessage5, rowColumnCells, keepPopupOpen: true),
+                new MarkHintCellsStep(thirdRegionCells, null, StepMessage6, StepMessage7, contextAfterSecondCell, keepPopupOpen: true),
+                new DoubleTapCellStep(1, 0, StepMessage8, fourthColumnCells, keepPopupOpen: true),
+                new PersistentHintStep(StepMessage9, StepMessage10)
             };
 
             _manager = new TutorialManager(_session, _board, _input, _tutorial, _ui);
@@ -101,7 +103,6 @@ namespace Cast.Game
             _session.Ended -= OnEnded;
             if (_manager != null && _manager.IsRunning) _manager.Abort();
             _manager = null;
-            _gameplayViewRef.View?.SetVisible(true);
         }
 
         private void OnTutorialFinished()

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CaskFramework.UI;
+using Cysharp.Threading.Tasks;
 
 namespace Cast.Game
 {
@@ -11,6 +12,7 @@ namespace Cast.Game
         public IBoardInput Input { get; }
         public TutorialController View { get; }
         public IUIManager Ui { get; }
+        public PopupTutorialHint ActivePopup { get; set; }
 
         private IReadOnlyList<TutorialStep> _steps;
         private Action _onFinished;
@@ -59,6 +61,14 @@ namespace Cast.Game
             _steps = null;
 
             current?.End(this);
+            CloseActivePopupAsync().Forget();
+        }
+
+        private async UniTask CloseActivePopupAsync()
+        {
+            if (ActivePopup == null) return;
+            ActivePopup = null;
+            await Ui.PopPopupAsync();
         }
 
         private void Advance()

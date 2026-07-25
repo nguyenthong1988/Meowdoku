@@ -32,6 +32,10 @@ namespace Cast.Game
         public int Hearts => _hearts;
         public int HeartsMax => _config.HeartsMax;
         public int HintsRemaining => _hintsRemaining;
+        public float ElapsedTime =>
+            _phase == GamePhase.Playing
+                ? UnityEngine.Time.realtimeSinceStartup - _startTime
+                : 0f;
 
         public event Action<GamePhase> PhaseChanged;
         public event Action<CellChange> CellChanged;
@@ -54,6 +58,11 @@ namespace Cast.Game
         {
             _startTime = UnityEngine.Time.realtimeSinceStartup;
             SetPhase(GamePhase.Playing);
+        }
+
+        public void CheatFinish(bool won)
+        {
+            Finish(won);
         }
 
         public MoveOutcome Reveal(int row, int col)
@@ -137,6 +146,15 @@ namespace Cast.Game
             HeartsChanged = null;
             MoveRejected = null;
             Ended = null;
+        }
+
+        public bool Revive()
+        {
+            if (_phase != GamePhase.Result || _hearts > 0) return false;
+            _hearts = _config.HeartsMax;
+            HeartsChanged?.Invoke(_hearts);
+            SetPhase(GamePhase.Playing);
+            return true;
         }
 
         private void ApplyMark(int row, int col, PlayerMark mark, bool costHeart)

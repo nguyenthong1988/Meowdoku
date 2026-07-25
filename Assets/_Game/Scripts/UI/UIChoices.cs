@@ -13,6 +13,7 @@ namespace Cast.Game
         Next = 0,
         Replay = 1,
         Home = 2,
+        NextTheme = 3,
     }
 
     public enum LoseChoice : byte

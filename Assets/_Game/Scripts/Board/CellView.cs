@@ -1,4 +1,5 @@
 
+using System.Collections;
 using CaskFramework.Audio;
 using CaskFramework.Core;
 using LitMotion;
@@ -18,6 +19,7 @@ namespace Cast.Game
         [SerializeField] private Animator _animator;
         [SerializeField] private SpriteAsset _spriteAsset;
         [SerializeField] private float _ghostAlpha = 0.45f;
+        [SerializeField] private ParticleSystem _vfxRevealSuccess;
 
         private static readonly int StateIdle = Animator.StringToHash("Idle");
         private static readonly int StateReveal = Animator.StringToHash("Reveal");
@@ -28,12 +30,18 @@ namespace Cast.Game
         private GhostState _ghost = GhostState.None;
         private IAudioManager _audio;
         private int _currentState = StateIdle;
+        private Coroutine _vfxRevealSuccessRoutine;
 
         private enum GhostState : byte { None = 0, Hint = 1, Reveal = 2 }
 
         public int Row { get; private set; }
         public int Col { get; private set; }
         public int ColorIndex { get; private set; }
+
+        private void Awake()
+        {
+            if (_vfxRevealSuccess != null) _vfxRevealSuccess.gameObject.SetActive(false);
+        }
 
         public void SetCell(int row, int col, int colorIndex, float cellSize)
         {
@@ -46,7 +54,10 @@ namespace Cast.Game
 
             if (_background != null) _background.sprite = _spriteAsset.GetSprite(colorIndex) != null ? _spriteAsset.GetSprite(colorIndex) : PlaceholderSprites.Square;
 
+            _ghost = GhostState.None;
+            _currentState = -1;
             SetMark(PlayerMark.None);
+            SetSortingLayer("Gameplay");
             _audio = GameRuntime.Get<IAudioManager>();
         }
 
@@ -54,8 +65,16 @@ namespace Cast.Game
 
         public void SetMark(PlayerMark mark)
         {
+            PlayerMark prev = CurrentMark;
             CurrentMark = mark;
             RefreshVisual();
+            if (_audio != null)
+            {
+                if (mark == PlayerMark.Hint && prev != PlayerMark.Hint)
+                    _audio.PlaySfx(AudioNames.SFX_HINT_SELECT);
+                else if (mark == PlayerMark.None && prev == PlayerMark.Hint)
+                    _audio.PlaySfx(AudioNames.SFX_HINT_UNSELECT);
+            }
         }
 
         public void SetGhostHint(bool on)
@@ -82,16 +101,27 @@ namespace Cast.Game
             bool ghostHint = _ghost == GhostState.Hint;
             bool ghostReveal = _ghost == GhostState.Reveal;
 
+            bool showCharacter = CurrentMark == PlayerMark.Character || ghostReveal;
+            bool showHint = CurrentMark == PlayerMark.Hint || ghostHint;
+
             int targetState = StateIdle;
-            if (CurrentMark == PlayerMark.Character || ghostReveal) targetState = StateReveal;
-            else if (CurrentMark == PlayerMark.Hint || ghostHint) targetState = StateHint;
+            if (showCharacter) targetState = StateReveal;
+            else if (showHint) targetState = StateHint;
             else if (CurrentMark == PlayerMark.Wrong) targetState = StateWrong;
 
             PlayState(targetState);
 
-            SetRendererAlpha(_character, ghostReveal && CurrentMark != PlayerMark.Character ? _ghostAlpha : 1f);
-            SetRendererAlpha(_markHintL, ghostHint && CurrentMark != PlayerMark.Hint ? _ghostAlpha : 1f);
-            SetRendererAlpha(_markHintR, ghostHint && CurrentMark != PlayerMark.Hint ? _ghostAlpha : 1f);
+            float charAlpha = showCharacter
+                ? (ghostReveal && CurrentMark != PlayerMark.Character ? _ghostAlpha : 1f)
+                : 0f;
+
+            float hintAlpha = showHint
+                ? (ghostHint && CurrentMark != PlayerMark.Hint ? _ghostAlpha : 1f)
+                : 0f;
+
+            SetRendererAlpha(_character, charAlpha);
+            SetRendererAlpha(_markHintL, hintAlpha);
+            SetRendererAlpha(_markHintR, hintAlpha);
         }
 
         private void PlayState(int state)
@@ -129,6 +159,23 @@ namespace Cast.Game
         public void PlayPlace()
         {
             _audio.PlaySfx(AudioNames.SFX_REVEAL_SUCCESS);
+            PlayVfxRevealSuccess();
+        }
+
+        private void PlayVfxRevealSuccess()
+        {
+            if (_vfxRevealSuccess == null) return;
+            if (_vfxRevealSuccessRoutine != null) StopCoroutine(_vfxRevealSuccessRoutine);
+            _vfxRevealSuccess.gameObject.SetActive(true);
+            _vfxRevealSuccess.Play();
+            _vfxRevealSuccessRoutine = StartCoroutine(DeactivateVfxRevealSuccessWhenDone());
+        }
+
+        private IEnumerator DeactivateVfxRevealSuccessWhenDone()
+        {
+            yield return new WaitWhile(() => _vfxRevealSuccess.IsAlive(true));
+            _vfxRevealSuccess.gameObject.SetActive(false);
+            _vfxRevealSuccessRoutine = null;
         }
 
         public void PlayShake()
@@ -140,6 +187,7 @@ namespace Cast.Game
         private void SetAlpha(float a)
         {
             ApplyAlpha(_background, a);
+            ApplyAlpha(_character, a);
             ApplyAlpha(_markHintL, a);
             ApplyAlpha(_markHintR, a);
             ApplyAlpha(_markWrongL, a);

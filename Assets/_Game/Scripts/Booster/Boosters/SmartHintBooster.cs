@@ -54,7 +54,7 @@ namespace Cast.Game
             {
                 RevertBoard();
                 await ui.PopPopupAsync();
-                onDone(BoosterResult.Ok(Type));
+                onDone(BoosterResult.Cancel(Type));
                 return;
             }
 
@@ -74,7 +74,7 @@ namespace Cast.Game
             if (applied)
                 Apply(controller.Session, hint);
 
-            onDone(BoosterResult.Ok(Type));
+            onDone(applied ? BoosterResult.Ok(Type) : BoosterResult.Cancel(Type));
         }
 
         private static List<(int Row, int Col)> CollectInvolvedCells(HintResult hint)

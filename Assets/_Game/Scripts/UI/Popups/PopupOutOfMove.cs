@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -24,6 +23,11 @@ namespace Cast.Game
             {
                 _reviveButton.onClick.RemoveAllListeners();
                 _reviveButton.onClick.AddListener(() => Choose(LoseChoice.Revive));
+
+                bool canRevive = true;
+                if (FeatureManager.TryGet(out AdFeature adFeature))
+                    canRevive = !adFeature.IsRewardRequired || adFeature.CanShowRewarded();
+                _reviveButton.interactable = canRevive;
             }
         }
     }

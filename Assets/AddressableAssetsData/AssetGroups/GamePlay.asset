@@ -15,8 +15,53 @@ MonoBehaviour:
   m_GroupName: GamePlay
   m_GUID: 6041a5e31aeb54ad980f940356a0cb77
   m_SerializeEntries:
+  - m_GUID: 1ec1f188234df49fe9649a05e6854520
+    m_Address: lotus_pool_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 45e3ac9848c5e469897b23f8c1a8b168
+    m_Address: lotus_pool_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7d5aeac82bf18424497532775485872d
+    m_Address: background_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 976a3fe1be9d842e1987b2afbe8f8b71
+    m_Address: background_home
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a4e852db5d30242dcb6a1ec85f0d89be
+    m_Address: background_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aa08529d3fa8f4eb8a4e75b5719f6896
     m_Address: CellView
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ab8ad04854cbf40bf912b119bd5af068
+    m_Address: background_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ae81782fc5f914ffe9b83656897bf313
+    m_Address: lotus_pool_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b7c7cd75afcce4c0e8db78f269f3bf25
+    m_Address: background_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c73ef0cd199c74b9c823252b864eadd5
+    m_Address: lotus_pool_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
