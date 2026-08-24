@@ -14,6 +14,7 @@ namespace Cast.Game
 {
     public sealed class ViewHome : Page
     {
+        [SerializeField] private CanvasGroup _content;
         [SerializeField] private TextMeshProUGUI _levelLabel;
         [SerializeField] private Button _playButton;
         [SerializeField] private Button _settingsButton;
@@ -22,6 +23,7 @@ namespace Cast.Game
         [SerializeField] private GameObject _dailyChallengeCompleted;
 
         private const string CoinKey = "coin";
+        private const float HideDuration = 0.22f;
 
         private Action _onPlayClicked;
         private Action _onDailyChallengeClicked;
@@ -97,7 +99,26 @@ namespace Cast.Game
 
         public override void DidPushEnter(Memory<object> args)
         {
+            if (_content != null)
+            {
+                _content.alpha = 1f;
+                _content.interactable = true;
+                _content.blocksRaycasts = true;
+            }
             PlayAppearAnimation();
+        }
+
+        public UniTask PlayHideAnimationAsync()
+        {
+            if (_content == null) return UniTask.CompletedTask;
+
+            _content.interactable = false;
+            _content.blocksRaycasts = false;
+
+            return LMotion.Create(_content.alpha, 0f, HideDuration)
+                .WithEase(Ease.InQuad)
+                .Bind(_content, (alpha, group) => group.alpha = alpha)
+                .ToUniTask();
         }
 
         private void PlayAppearAnimation()

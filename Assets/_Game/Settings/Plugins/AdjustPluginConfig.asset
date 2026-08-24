@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02526f0da2b4702dcab7674e000a65cf, type: 3}
+  m_Name: AdjustPluginConfig
+  m_EditorClassIdentifier: 
+  _enabled: 1
+  _priority: 20
+  _requiresConsent: 1
+  _skipWhenConsentDenied: 0
+  _settings:
+    _appToken: 9xlxmixfb20w
+    _fbAppId: '2195597284618591'
+    _adRevenueSource: applovin_max_sdk
+    _firstOpenToken_and: 
+    _firstOpenToken_iOS: 
+    _appOpenToken_and: 
+    _appOpenToken_iOS: 
+    _adWatchToken_and: 
+    _adWatchToken_iOS: 
+    _adCompleteCount: []
+    _androidAdCompleteCount: []
+    _adRWCompleteCount: []
+    _androidAdRWCompleteCount: []
+    _loginDays: []
+    _androidLoginDays: []

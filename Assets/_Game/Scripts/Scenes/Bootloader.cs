@@ -67,18 +67,30 @@ namespace Cast.Game
 
         private async UniTask ShowSplashSceenAsync()
         {
+            GameAnalytics.LoadingStart(AnalyticsValues.loading_type_app, Application.version);
+            AdNetworkTracker.Track(AdNetworkEvents.app_open);
+
             var ui = GameRuntime.Get<IUIManager>();
             ViewSplashScreen splashView = null;
             await ui.PushTopViewAsync<ViewSplashScreen>("ViewSplashScreen", stack: false, onLoad: (_, view) =>
             {
                 splashView = view;
             });
+
+            if (splashView == null)
+            {
+                GameAnalytics.LoadingEnd(AnalyticsValues.loading_type_app, Application.version, true, "Splash view failed to load");
+                return;
+            }
+
             float stepDuration = _splashSeconds / 4f;
             for (int i = 1; i <= 4; i++)
             {
                 await UniTask.Delay(System.TimeSpan.FromSeconds(stepDuration));
-                if (splashView != null) splashView.SetPercentage(i / 4f);
+                splashView.SetPercentage(i / 4f);
             }
+
+            GameAnalytics.LoadingEnd(AnalyticsValues.loading_type_app, Application.version, false);
         }
     }
 }

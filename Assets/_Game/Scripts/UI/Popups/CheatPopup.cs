@@ -1,4 +1,5 @@
 using System;
+using CaskFramework.Ads;
 using CaskFramework.Core;
 using CaskFramework.UI;
 using TMPro;
@@ -12,6 +13,7 @@ namespace Cast.Game
     {
         [SerializeField] private TMP_InputField _inputField;
         [SerializeField] private Button _submitButton;
+        [SerializeField] private Button _adsDebugButton;
         [SerializeField] private Button _closeButton;
         [SerializeField] private TextMeshProUGUI _errorText;
 
@@ -38,6 +40,12 @@ namespace Cast.Game
             {
                 _closeButton.onClick.RemoveAllListeners();
                 _closeButton.onClick.AddListener(Hide);
+            }
+
+            if (_adsDebugButton != null)
+            {
+                _adsDebugButton.onClick.RemoveAllListeners();
+                _adsDebugButton.onClick.AddListener(ShowAdDebugger);
             }
         }
 
@@ -71,6 +79,18 @@ namespace Cast.Game
                     CloseThen(_onLose);
                     break;
 
+                case "addebug":
+                    CloseThen(ShowAdDebugger);
+                    break;
+
+                case "adon":
+                    CloseThen(() => SetAdsEnabled(true));
+                    break;
+
+                case "adoff":
+                    CloseThen(() => SetAdsEnabled(false));
+                    break;
+
                 default:
                     ShowError($"Invalid command: {command}");
                     break;
@@ -81,6 +101,18 @@ namespace Cast.Game
         {
             Hide();
             action?.Invoke();
+        }
+
+        private void ShowAdDebugger()
+        {
+            if (GameRuntime.TryGet(out IAdsService ads))
+                ads.ShowDebugger();
+        }
+
+        private void SetAdsEnabled(bool enabled)
+        {
+            if (GameRuntime.TryGet(out IAdsService ads))
+                ads.TurnOffAds(!enabled);
         }
 
         private void ShowError(string message)

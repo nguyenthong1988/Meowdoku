@@ -111,11 +111,16 @@ namespace Cast.Game
 
         private void OnGesture(CellGesture g)
         {
+            if (Mode == BoardInputMode.Locked) return;
+
+            if (g.Gesture == PointerGesture.PressDown)
+            {
+                _board.GetCell(g.Row, g.Col)?.PunchPress();
+                return;
+            }
+
             switch (Mode)
             {
-                case BoardInputMode.Locked:
-                    return;
-
                 case BoardInputMode.Targeting:
                     if (g.Gesture == PointerGesture.Tap || g.Gesture == PointerGesture.DoubleTap)
                     {

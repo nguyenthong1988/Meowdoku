@@ -22,7 +22,7 @@ namespace Cast.Game
         private readonly BoardView _board;
         private readonly IBoardInput _input;
         private readonly IProfileService _profile;
-        private readonly TutorialController _tutorial;
+        private readonly TutorialHandView _hand;
         private readonly IUIManager _ui;
         private readonly GameplayViewRef _gameplayViewRef;
 
@@ -31,7 +31,7 @@ namespace Cast.Game
         private GameResult _endedResult;
 
         public FtueState(GameStateMachine machine, IGameSession session, BoardView board,
-                         IBoardInput input, IProfileService profile, TutorialController tutorial,
+                         IBoardInput input, IProfileService profile, TutorialHandView hand,
                          IUIManager ui, GameplayViewRef gameplayViewRef)
         {
             _machine = machine;
@@ -39,7 +39,7 @@ namespace Cast.Game
             _board = board;
             _input = input;
             _profile = profile;
-            _tutorial = tutorial;
+            _hand = hand;
             _ui = ui;
             _gameplayViewRef = gameplayViewRef;
         }
@@ -68,19 +68,35 @@ namespace Cast.Game
 
             var fourthColumnCells = new List<(int Row, int Col)> { (0, 0), (2, 0), (3, 0) };
 
+            var thirdRegionDragPath = new List<(int Row, int Col)> { (2, 1), (2, 0), (3, 0) };
+
             var steps = new List<TutorialStep>
             {
                 new DoubleTapCellStep(cat.Row, cat.Col, StepMessage1),
                 new PopupConfirmStep(StepMessage2),
                 new MarkHintCellsStep(rowColumnCells, (cat.Row, cat.Col), StepMessage3, StepMessage4, keepPopupOpen: true),
                 new DoubleTapCellStep(secondCell.Row, secondCell.Col, StepMessage5, rowColumnCells, keepPopupOpen: true),
-                new MarkHintCellsStep(thirdRegionCells, null, StepMessage6, StepMessage7, contextAfterSecondCell, keepPopupOpen: true),
+                new MarkHintCellsStep(thirdRegionCells, null, StepMessage6, StepMessage7, contextAfterSecondCell, keepPopupOpen: true, handDragPath: thirdRegionDragPath),
                 new DoubleTapCellStep(1, 0, StepMessage8, fourthColumnCells, keepPopupOpen: true),
                 new PersistentHintStep(StepMessage9, StepMessage10)
             };
 
-            _manager = new TutorialManager(_session, _board, _input, _tutorial, _ui);
+            _manager = new TutorialManager(_session, _board, _input, _hand, _ui);
+            _manager.StepStarted += OnStepStarted;
+            _manager.StepCompleted += OnStepCompleted;
+
+            GameAnalytics.Ftue("ftue", AnalyticsValues.screen_gameplay, "start");
             _manager.Run(steps, OnTutorialFinished);
+        }
+
+        private void OnStepStarted(int index, TutorialStep step)
+        {
+            GameAnalytics.Ftue($"step_{index + 1}_{step.GetType().Name}", AnalyticsValues.screen_gameplay, "start");
+        }
+
+        private void OnStepCompleted(int index)
+        {
+            GameAnalytics.Ftue($"step_{index + 1}", AnalyticsValues.screen_gameplay, "complete");
         }
 
         private List<(int Row, int Col)> BuildRowColumnCells(CharacterPlacement cat)
@@ -101,13 +117,20 @@ namespace Cast.Game
         public void Exit()
         {
             _session.Ended -= OnEnded;
-            if (_manager != null && _manager.IsRunning) _manager.Abort();
+            if (_manager != null)
+            {
+                _manager.StepStarted -= OnStepStarted;
+                _manager.StepCompleted -= OnStepCompleted;
+                if (_manager.IsRunning) _manager.Abort();
+            }
             _manager = null;
         }
 
         private void OnTutorialFinished()
         {
+            GameAnalytics.Ftue("ftue", AnalyticsValues.screen_gameplay, "complete");
             _profile.CompleteFtue();
+            AdNetworkTracker.Track(AdNetworkEvents.tutorial_complete);
 
             if (_endedWon)
             {
@@ -128,6 +151,7 @@ namespace Cast.Game
         private void CompleteAndAdvance()
         {
             _profile.CompleteFtue();
+            AdNetworkTracker.Track(AdNetworkEvents.tutorial_complete);
             _machine.ChangeState<PlayState>();
         }
     }

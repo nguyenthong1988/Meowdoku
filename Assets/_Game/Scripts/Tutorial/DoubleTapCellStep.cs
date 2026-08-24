@@ -47,6 +47,8 @@ namespace Cast.Game
             var allowed = new List<(int Row, int Col)> { (_row, _col) };
             manager.Input.BeginHintPreview(allowed, onTap: null, onDoubleTap: OnCellDoubleTapped);
 
+            manager.ShowTouchHand(_row, _col);
+
             ShowPopupAsync(manager).Forget();
         }
 
@@ -60,6 +62,7 @@ namespace Cast.Game
         private void Unhighlight(TutorialManager manager)
         {
             manager.Input.EndHintPreview();
+            manager.HideHand();
             if (!_highlighted) return;
 
             _highlighted = false;

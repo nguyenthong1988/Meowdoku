@@ -38,9 +38,11 @@ SpriteAtlas:
     cachedData: {fileID: 0}
     packedSpriteRenderDataKeys:
     - a44efad01189c48f687d213d2be5cb64: 21300000
+    - b52c98e04f7d41a6883c1d5e2f907a6b: 21300000
     - f3ba4381225a34ae4bbbe7d8cc658960: 21300000
     - 686d47b24ed2843c68bedbe3f0cecc87: 21300000
     - 22068253931fa471ab9cc9e4b83a125e: 21300000
+    - 0c7a4e63d91b482fa65c3d08e7b19f42: 21300000
     - b5caa254eacad4e75b4d0a8710d71782: 21300000
     - c8deae943f21a453089b5f8056d7f6f4: 21300000
     - 62225c451aa5e4b7098084d66323a5f1: 21300000
@@ -49,9 +51,12 @@ SpriteAtlas:
     - a7e87c96d6ec44370a28f19c4d9a3071: 21300000
     - 3c3e1ca674a9e4e7780519958868159f: 21300000
     - ef144a1750ee54cdd97636188dc13fe2: 21300000
+    - d81f4a27c60b4e93a5f27e6b18c034da: 21300000
     - da30de28b599949adb4708e0ef1266fe: 21300000
     - 45edd5783ce8247e2887bcf49b95b80e: 21300000
+    - 5b8e3c19a7d24f60b83e1c94d05a2e7f: 21300000
     - 29c7401a8b04f460786092a75e4af720: 21300000
+    - 8f204d7b6ce34a1985cd0b3e71f2a856: 21300000
     - 8ac236abef3b34dfb91f37a64903c702: 21300000
     - ef2278cb5ecae4ab9817e1efda6d8fec: 21300000
     - f77c1cdb7ed38447ca014e883376a141: 21300000
@@ -66,9 +71,11 @@ SpriteAtlas:
   m_MasterAtlas: {fileID: 0}
   m_PackedSprites:
   - {fileID: 21300000, guid: a44efad01189c48f687d213d2be5cb64, type: 3}
+  - {fileID: 21300000, guid: b52c98e04f7d41a6883c1d5e2f907a6b, type: 3}
   - {fileID: 21300000, guid: f3ba4381225a34ae4bbbe7d8cc658960, type: 3}
   - {fileID: 21300000, guid: 686d47b24ed2843c68bedbe3f0cecc87, type: 3}
   - {fileID: 21300000, guid: 22068253931fa471ab9cc9e4b83a125e, type: 3}
+  - {fileID: 21300000, guid: 0c7a4e63d91b482fa65c3d08e7b19f42, type: 3}
   - {fileID: 21300000, guid: b5caa254eacad4e75b4d0a8710d71782, type: 3}
   - {fileID: 21300000, guid: c8deae943f21a453089b5f8056d7f6f4, type: 3}
   - {fileID: 21300000, guid: 62225c451aa5e4b7098084d66323a5f1, type: 3}
@@ -77,9 +84,12 @@ SpriteAtlas:
   - {fileID: 21300000, guid: a7e87c96d6ec44370a28f19c4d9a3071, type: 3}
   - {fileID: 21300000, guid: 3c3e1ca674a9e4e7780519958868159f, type: 3}
   - {fileID: 21300000, guid: ef144a1750ee54cdd97636188dc13fe2, type: 3}
+  - {fileID: 21300000, guid: d81f4a27c60b4e93a5f27e6b18c034da, type: 3}
   - {fileID: 21300000, guid: da30de28b599949adb4708e0ef1266fe, type: 3}
   - {fileID: 21300000, guid: 45edd5783ce8247e2887bcf49b95b80e, type: 3}
+  - {fileID: 21300000, guid: 5b8e3c19a7d24f60b83e1c94d05a2e7f, type: 3}
   - {fileID: 21300000, guid: 29c7401a8b04f460786092a75e4af720, type: 3}
+  - {fileID: 21300000, guid: 8f204d7b6ce34a1985cd0b3e71f2a856, type: 3}
   - {fileID: 21300000, guid: 8ac236abef3b34dfb91f37a64903c702, type: 3}
   - {fileID: 21300000, guid: ef2278cb5ecae4ab9817e1efda6d8fec, type: 3}
   - {fileID: 21300000, guid: f77c1cdb7ed38447ca014e883376a141, type: 3}
@@ -93,9 +103,11 @@ SpriteAtlas:
   - {fileID: 21300000, guid: e43e6dff636124e98b41b97d21b316b9, type: 3}
   m_PackedSpriteNamesToIndex:
   - badge-green
+  - frog_eye
   - heart_break_R
   - mark_hint
   - booser-box
+  - frog_fly
   - lotus4
   - booster-icon-frog
   - lotus10
@@ -104,9 +116,12 @@ SpriteAtlas:
   - lotus9
   - lotus7
   - lotus3
+  - frog_body
   - booster-icon-undo
   - icon-red
+  - frog_tongue
   - mark_wrong
+  - frog_eyelid
   - frog_character
   - lotus5
   - lotus8

@@ -9,7 +9,7 @@ namespace Cast.Game
     {
         public float TapMaxDuration = 0.25f;
 
-        public float DoubleTapWindow = 0.30f;
+        public float DoubleTapWindow = 0.18f;
 
         public float LongPressDuration = 0.40f;
 

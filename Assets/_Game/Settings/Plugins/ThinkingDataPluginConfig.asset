@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a3c6efaea9eabb456bf6662286f69cc, type: 3}
+  m_Name: ThinkingDataPluginConfig
+  m_EditorClassIdentifier: 
+  _enabled: 1
+  _priority: 20
+  _requiresConsent: 0
+  _skipWhenConsentDenied: 0
+  _appId: 7384a37d0293480c8f026a115a0bdebd
+  _serverUrl: 'https://api.woeve.com '
+  _enableLog: 0

@@ -12,6 +12,7 @@ namespace Cast.Game
         private readonly string _messageTop;
         private readonly string _messageBot;
         private readonly List<(int Row, int Col)> _contextCells;
+        private readonly List<(int Row, int Col)> _handDragPath;
         private readonly bool _keepPopupOpen;
 
         private TutorialManager _manager;
@@ -23,7 +24,8 @@ namespace Cast.Game
         public MarkHintCellsStep(IEnumerable<(int Row, int Col)> cells, (int Row, int Col)? excludedCell,
                                  string messageTop, string messageBot,
                                  IEnumerable<(int Row, int Col)> contextCells = null,
-                                 bool keepPopupOpen = false)
+                                 bool keepPopupOpen = false,
+                                 IEnumerable<(int Row, int Col)> handDragPath = null)
         {
             _cells = new List<(int Row, int Col)>(cells);
             _excludedCell = excludedCell;
@@ -31,6 +33,7 @@ namespace Cast.Game
             _messageBot = messageBot;
             _contextCells = contextCells != null ? new List<(int Row, int Col)>(contextCells) : new List<(int Row, int Col)>();
             _keepPopupOpen = keepPopupOpen;
+            _handDragPath = handDragPath != null ? new List<(int Row, int Col)>(handDragPath) : null;
         }
 
         public override string Message => _messageTop;
@@ -50,6 +53,8 @@ namespace Cast.Game
 
             manager.Input.BeginHintPreview(_cells, onTap: OnCellTapped, onDoubleTap: null, onDrag: OnCellDragged);
 
+            manager.ShowDragHand(_handDragPath);
+
             ShowPopupAsync(manager).Forget();
         }
 
@@ -63,6 +68,7 @@ namespace Cast.Game
         private void Unhighlight(TutorialManager manager)
         {
             manager.Input.EndHintPreview();
+            manager.HideHand();
             if (!_highlighted) return;
 
             _highlighted = false;
@@ -109,6 +115,7 @@ namespace Cast.Game
         {
             if (_completed) return;
 
+            _manager.HideHand();
             _manager.Session.ToggleHint(row, col);
 
             TryComplete();
@@ -118,6 +125,7 @@ namespace Cast.Game
         {
             if (_completed) return;
 
+            _manager.HideHand();
             if (_manager.Session.Board.GetMark(row, col) != PlayerMark.Hint)
                 _manager.Session.SetHint(row, col, true);
 

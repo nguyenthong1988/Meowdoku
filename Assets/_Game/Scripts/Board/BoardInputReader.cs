@@ -87,6 +87,8 @@ namespace Cast.Game
 
         private void OnPressDown(Vector2 screen)
         {
+            Emit(screen, PointerGesture.PressDown);
+
             _pressing = true;
             _longFired = false;
             _dragging = false;

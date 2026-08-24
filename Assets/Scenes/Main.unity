@@ -270,7 +270,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Cast.Game.Flow.GameSceneEntry
   _boardView: {fileID: 384326390}
   _input: {fileID: 384326391}
-  _tutorial: {fileID: 0}
+  _tutorialHandPrefab: {fileID: 7412300000000001003, guid: 6a15c8f27b934de0a92c5f138e647b0d, type: 3}
   _theme: {fileID: 895240905}
   _config:
     HeartsMax: 3
@@ -426,7 +426,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Cast.Game.Board.BoardInputReader
   _config:
     TapMaxDuration: 0.25
-    DoubleTapWindow: 0.3
+    DoubleTapWindow: 0.18
     LongPressDuration: 0.4
     TapSlopPixels: 24
 --- !u!1 &391084228
@@ -747,7 +747,6 @@ GameObject:
   m_Component:
   - component: {fileID: 849413917}
   - component: {fileID: 849413918}
-  - component: {fileID: 849413919}
   m_Layer: 0
   m_Name: Tracking
   m_TagString: Untagged
@@ -779,37 +778,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 849413916}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f2ab3d66e83948ca8866a62e315c66a, type: 3}
+  m_Script: {fileID: 11500000, guid: c43c3960a8e09025ded8db47dd542606, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Cast.Game.TrackingFeature
-  _enableCrashlytics: 1
-  _adjustProvider: {fileID: 849413919}
---- !u!114 &849413919
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 849413916}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3cbeec72e9c9f4fa7beda12419625664, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CaskFramework::CaskFramework.Analytics.AdjustAnalyticsProvider
-  _appToken: 9xlxmixfb20w
-  _fbAppId: 2195597284618591
-  _firstOpenToken_and: 
-  _firstOpenToken_iOS: 
-  _appOpenToken_and: 
-  _appOpenToken_iOS: 
-  _adWatchToken_and: 
-  _adWatchToken_iOS: 
-  _adCompleteCount: []
-  _androidAdCompleteCount: []
-  _adRWCompleteCount: []
-  _androidAdRWCompleteCount: []
-  _loginDays: []
-  _androidLoginDays: []
+  m_EditorClassIdentifier: CaskFramework::CaskFramework.Plugins.PluginHost
+  _configs:
+  - {fileID: 11400000, guid: dc3f1eebabb3335d7c0ba30f7e515cd4, type: 2}
+  - {fileID: 11400000, guid: d9306d51749dc7d0e6f8bc68d32339fb, type: 2}
+  - {fileID: 11400000, guid: a7ef7e3adca9cd62a4078b05f6588a2a, type: 2}
+  - {fileID: 11400000, guid: f567bf61f6fb7595c8b67a73c4d21a52, type: 2}
+  - {fileID: 11400000, guid: 1931e923804c2b30f73cab78f1e19375, type: 2}
+  _consentGate: {fileID: 11400000, guid: 65ff090fe7e05ad7d93c66beb97a1664, type: 2}
+  _bootOnAwake: 1
+  _persistAcrossScenes: 1
 --- !u!1 &857804467
 GameObject:
   m_ObjectHideFlags: 0
@@ -918,7 +898,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 902937175}
-  - component: {fileID: 902937176}
   - component: {fileID: 902937177}
   m_Layer: 0
   m_Name: Manager
@@ -945,18 +924,6 @@ Transform:
   - {fileID: 713435783}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &902937176
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 902937174}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a683a1512fc24738aa4b796fec21817b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CaskFramework::CaskFramework.Core.GameRuntime
 --- !u!114 &902937177
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -32,6 +32,7 @@ namespace Cast.Game
         public int Hearts => _hearts;
         public int HeartsMax => _config.HeartsMax;
         public int HintsRemaining => _hintsRemaining;
+        public int Moves => _moves;
         public float ElapsedTime =>
             _phase == GamePhase.Playing
                 ? UnityEngine.Time.realtimeSinceStartup - _startTime
@@ -170,7 +171,11 @@ namespace Cast.Game
         {
             _hearts = Math.Max(0, _hearts - 1);
             HeartsChanged?.Invoke(_hearts);
-            if (_hearts == 0) Finish(won: false);
+            if (_hearts == 0)
+            {
+                AdNetworkTracker.Track(AdNetworkEvents.energy_depleted);
+                Finish(won: false);
+            }
         }
 
         private void GainHeart()

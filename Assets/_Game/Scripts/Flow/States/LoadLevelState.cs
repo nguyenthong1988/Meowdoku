@@ -66,7 +66,7 @@ namespace Cast.Game
         private async UniTaskVoid LoadAsync()
         {
             if (_ads.ShouldShowInterstitial(_entryType))
-                await _ads.ShowInterstitialAsync();
+                await _ads.ShowInterstitialAsync(_entryType.ToString());
 
             _entryType = AdPosition.NormalStart;
             GameMode currentMode = _gameMode;
@@ -76,17 +76,24 @@ namespace Cast.Game
                 ? _dailyChallenge.GetDailyLevelId()
                 : _profile.CurrentLevelId();
 
+            GameAnalytics.LoadingStart(AnalyticsValues.loading_type_level, levelId.ToString());
+
             LevelReadResult read = await _reader.ReadLevelAsync(levelId);
             if (!read.Success)
             {
-                Debug.LogError($"[LoadLevelState] Failed to load level {levelId}:\n{read.Validation?.Summary()}");
+                string reason = read.Validation?.Summary() ?? "Unknown level read failure";
+                Debug.LogError($"[LoadLevelState] Failed to load level {levelId}:\n{reason}");
+                GameAnalytics.LoadingEnd(AnalyticsValues.loading_type_level, levelId.ToString(), true, reason);
                 _machine.ChangeState<HomeState>();
                 return;
             }
 
+            GameAnalytics.LoadingEnd(AnalyticsValues.loading_type_level, levelId.ToString(), false);
+
             _board.SetVisible(false);
 
             _session.Setup(read.Level);
+            LevelAnalytics.BeginLevel(levelId, currentMode, read.Level);
             await _board.BuildAsync(read.Level);
             if (FeatureManager.TryGet(out ThemeFeature theme))
                 await UniTask.WhenAll(_board.ApplyThemeAsync(levelId), theme.ApplyThemeAsync(levelId));
@@ -119,7 +126,11 @@ namespace Cast.Game
                 _board,
                 _interaction,
                 _ui,
-                onHomeRequested: () => _machine.ChangeState<HomeState>(),
+                onHomeRequested: () =>
+                {
+                    LevelAnalytics.ReportQuit();
+                    _machine.ChangeState<HomeState>();
+                },
                 onRetryRequested: () => _machine.ChangeState<LoadLevelState>(s =>
                 {
                     s.SetEntryType(AdPosition.NormalRestart);

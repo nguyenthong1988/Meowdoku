@@ -81,13 +81,13 @@ namespace Cast.Game
             if (_termsButton != null)
             {
                 _termsButton.onClick.RemoveAllListeners();
-                _termsButton.onClick.AddListener(() => Application.OpenURL("https://www.example.com/terms"));
+                _termsButton.onClick.AddListener(() => Application.OpenURL("https://www.abysscoregames.com/terms.html"));
             }
 
             if (_privacyButton != null)
             {
                 _privacyButton.onClick.RemoveAllListeners();
-                _privacyButton.onClick.AddListener(() => Application.OpenURL("https://www.example.com/privacy"));
+                _privacyButton.onClick.AddListener(() => Application.OpenURL("https://www.abysscoregames.com/privacy.html"));
             }
         }
 

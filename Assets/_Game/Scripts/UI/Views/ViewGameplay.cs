@@ -37,6 +37,9 @@ namespace Cast.Game
         [SerializeField] private RectTransform _botContentContainer;
         [SerializeField] private RectTransform _hintGroupContainer;
 
+        private const int AppearDelayMilliseconds = 100;
+        private const float AppearSlideDuration = 0.25f;
+
         private IGameSession _session;
         private IBoosterController _boosters;
         private BoardView _boardView;
@@ -253,8 +256,8 @@ namespace Cast.Game
 
         private async UniTask PlayAppearAnimation()
         {
-            await UniTask.Delay(500);
-            const float duration = 0.25f;
+            await UniTask.Delay(AppearDelayMilliseconds);
+            const float duration = AppearSlideDuration;
 
             var topMotion = LMotion.Create(_topContentContainer.anchoredPosition, new Vector2(_topContentContainer.anchoredPosition.x, -100f), duration)
                 .BindToAnchoredPosition(_topContentContainer);

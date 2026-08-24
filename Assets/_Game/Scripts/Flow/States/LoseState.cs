@@ -15,6 +15,7 @@ namespace Cast.Game
 
         private GameResult _result;
         private GameMode _gameMode = GameMode.Normal;
+        private PopupOutOfMove _popup;
 
         public LoseState(GameStateMachine machine, IUIManager ui, BoardView board,
                          IGameSession session, AdFeature ads)
@@ -39,6 +40,7 @@ namespace Cast.Game
         public void Enter()
         {
             _ads.HideBanner();
+            _ads.LoadRewarded();
 
             _board.SetVisible(false);
             OpenLoseAsync().Forget();
@@ -46,32 +48,39 @@ namespace Cast.Game
 
         public void Exit()
         {
+            _popup = null;
         }
 
         private async UniTaskVoid OpenLoseAsync()
         {
             PopupOutOfMove popup = null;
-            await _ui.PushPopupAsync<PopupOutOfMove>(UIConst.PopupOutOfMove, onLoad: (_, p) => popup = p);
+            await _ui.PushPopupAsync<PopupOutOfMove>(UIConst.PopupOutOfMove, onLoad: (_, p) =>
+            {
+                popup = p;
+                p.SetChoiceCallback(OnChoice, LoseChoice.Retry);
+            });
             if (popup == null)
             {
                 _machine.ChangeState<HomeState>();
                 return;
             }
-            popup.SetChoiceCallback(OnChoice, LoseChoice.Retry);
+            _popup = popup;
             popup.Setup(_result);
         }
 
         private void OnChoice(LoseChoice choice)
         {
-            if (choice == LoseChoice.Home)
-            {
-                ClosePopupThen(() => _machine.ChangeState<HomeState>()).Forget();
-                return;
-            }
-
             if (choice == LoseChoice.Revive)
             {
                 HandleReviveAsync().Forget();
+                return;
+            }
+
+            LevelAnalytics.EndLevel(AnalyticsValues.level_status_lose, _result);
+
+            if (choice == LoseChoice.Home)
+            {
+                ClosePopupThen(() => _machine.ChangeState<HomeState>()).Forget();
                 return;
             }
 
@@ -85,17 +94,29 @@ namespace Cast.Game
 
         private async UniTaskVoid HandleReviveAsync()
         {
-            if (_ads.IsRewardRequired)
+            if (!await _ads.ShowRewardedAsync(placement: AdPosition.Revive.ToString(), action: "revive"))
             {
-                if (!await _ads.ShowRewardedAsync())
-                    return;
+                AllowNewChoice();
+                return;
             }
 
-            _session.Revive();
+            if (!_session.Revive())
+            {
+                AllowNewChoice();
+                return;
+            }
+
+            LevelAnalytics.RecordRescue();
             await _ui.PopPopupAsync();
             _board.SetVisible(true);
             GameMode mode = _gameMode;
             _machine.ChangeState<PlayState>(s => s.SetGameMode(mode));
+        }
+
+        private void AllowNewChoice()
+        {
+            if (_popup != null)
+                _popup.AllowNewChoice();
         }
 
         private async UniTaskVoid ClosePopupThen(System.Action next)

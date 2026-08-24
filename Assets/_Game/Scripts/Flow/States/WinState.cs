@@ -10,7 +10,7 @@ namespace Cast.Game
 {
     public sealed class WinState : IGameState
     {
-        private const float LastRevealDuration = 0.25f;
+        private const float LastRevealDuration = 0.9f;
 
         private readonly GameStateMachine _machine;
         private readonly IUIManager _ui;
@@ -48,6 +48,7 @@ namespace Cast.Game
 
         public void Enter()
         {
+            LevelAnalytics.EndLevel(AnalyticsValues.level_status_win, _result);
             _ads.HideBanner();
 
             if (GameRuntime.TryGet(out IAudioManager audio))

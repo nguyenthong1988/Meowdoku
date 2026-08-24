@@ -48,14 +48,21 @@ namespace Cast.Game
             await _ui.PushViewAsync<ViewHome>(UIConst.ViewHome, stack: false, onLoad: (_, v) => view = v);
             if (view == null) return;
             view.Setup(
-                () => _machine.ChangeState<LoadLevelState>(s => s.SetEntryType(AdPosition.NormalStart)),
-                () => _machine.ChangeState<LoadLevelState>(s =>
-                {
-                    s.SetEntryType(AdPosition.NormalStart);
-                    s.SetGameMode(GameMode.DailyChallenge);
-                }),
+                () => StartLevelAsync(view, GameMode.Normal).Forget(),
+                () => StartLevelAsync(view, GameMode.DailyChallenge).Forget(),
                 _profile,
                 _ui);
+        }
+
+        private async UniTaskVoid StartLevelAsync(ViewHome view, GameMode mode)
+        {
+            await view.PlayHideAnimationAsync();
+
+            _machine.ChangeState<LoadLevelState>(s =>
+            {
+                s.SetEntryType(AdPosition.NormalStart);
+                s.SetGameMode(mode);
+            });
         }
     }
 }

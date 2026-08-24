@@ -27,6 +27,8 @@ namespace Cast.Game
             if (_session.Phase != GamePhase.Playing)
                 _session.Begin();
 
+            _ads.LoadRewarded();
+
             if (_session.Level != null && _ads.ShouldShowBanner(_session.Level.Size))
                 _ads.ShowBanner();
         }

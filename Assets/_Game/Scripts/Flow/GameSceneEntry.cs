@@ -12,7 +12,7 @@ namespace Cast.Game
     {
         [SerializeField] private BoardView _boardView;
         [SerializeField] private BoardInputReader _input;
-        [SerializeField] private TutorialController _tutorial;
+        [SerializeField] private TutorialHandView _tutorialHandPrefab;
         [SerializeField] private ThemeFeature _theme;
         [SerializeField] private GameSessionConfig _config = new GameSessionConfig();
         [SerializeField] private AdRule _adRule = new AdRule();
@@ -63,12 +63,21 @@ namespace Cast.Game
 
             var gameplayViewRef = new GameplayViewRef();
 
+            TutorialHandView tutorialHand = _tutorialHandPrefab != null
+                ? Instantiate(_tutorialHandPrefab, _boardView.transform)
+                : null;
+
+            LevelAnalytics.Bind(session, boosters);
+
+            var adNetworkGameplayBinder = new AdNetworkGameplayBinder(boosters, profile);
+            adNetworkGameplayBinder.Bind();
+
             _machine = new GameStateMachine();
 
             _machine.Register(new HomeState(_machine, uiManager, _boardView, session, profile, adFeature));
             _machine.Register(new LoadLevelState(_machine, uiManager, reader, _boardView, session, interaction, boosters, profile, gameplayViewRef, adFeature, dailyChallenge));
             _machine.Register(new RevealState(_machine, _boardView, profile));
-            _machine.Register(new FtueState(_machine, session, _boardView, interaction, profile, _tutorial, uiManager, gameplayViewRef));
+            _machine.Register(new FtueState(_machine, session, _boardView, interaction, profile, tutorialHand, uiManager, gameplayViewRef));
             _machine.Register(new PlayState(_machine, session, adFeature));
             _machine.Register(new WinState(_machine, uiManager, _boardView, profile, dailyChallenge, _theme, adFeature));
             _machine.Register(new LoseState(_machine, uiManager, _boardView, session, adFeature));

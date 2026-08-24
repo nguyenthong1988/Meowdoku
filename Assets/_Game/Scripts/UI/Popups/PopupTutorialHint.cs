@@ -14,6 +14,8 @@ namespace Cast.Game
         private const float ContentScaleFrom = 0.85f;
         private const float ContentScaleTo = 1f;
         private const float ContentAnimDuration = 0.1f;
+        private const float ConfirmPulseScale = 0.88f;
+        private const float ConfirmPulseDuration = 0.55f;
 
         [SerializeField] private Button _confirmButton;
         [SerializeField] private TMP_Text _messageTextTop;
@@ -27,6 +29,7 @@ namespace Cast.Game
         private CanvasGroup _contentTopCanvasGroup;
         private CanvasGroup _contentBotCanvasGroup;
         private Button _botButton;
+        private MotionHandle _confirmPulseHandle;
 
         public bool Applied { get; private set; }
 
@@ -50,12 +53,14 @@ namespace Cast.Game
         {
             if (onConfirm == null)
             {
+                StopConfirmPulse();
                 _confirmButton.gameObject.SetActive(false);
             }
             else
             {
                 _confirmButton.gameObject.SetActive(true);
                 SetConfirmCallback(onConfirm);
+                StartConfirmPulse();
             }
 
             if (string.IsNullOrEmpty(messageTop))
@@ -93,6 +98,30 @@ namespace Cast.Game
                 .AddTo(content.gameObject);
         }
 
+        private void StartConfirmPulse()
+        {
+            StopConfirmPulse();
+            if (_confirmButton == null) return;
+
+            Transform target = _confirmButton.transform;
+            target.localScale = Vector3.one;
+
+            _confirmPulseHandle = LMotion.Create(1f, ConfirmPulseScale, ConfirmPulseDuration)
+                .WithEase(Ease.InOutSine)
+                .WithLoops(-1, LoopType.Yoyo)
+                .Bind(target, (scale, t) => t.localScale = Vector3.one * scale)
+                .AddTo(_confirmButton.gameObject);
+        }
+
+        private void StopConfirmPulse()
+        {
+            if (_confirmPulseHandle.IsActive())
+                _confirmPulseHandle.Cancel();
+
+            if (_confirmButton != null)
+                _confirmButton.transform.localScale = Vector3.one;
+        }
+
         private static CanvasGroup GetOrAddCanvasGroup(Transform target)
         {
             CanvasGroup group = target.GetComponent<CanvasGroup>();
@@ -111,6 +140,7 @@ namespace Cast.Game
         private void OnConfirmButtonClicked()
         {
             Applied = true;
+            StopConfirmPulse();
             Confirm();
         }
 
@@ -125,6 +155,7 @@ namespace Cast.Game
 
         private void OnDestroy()
         {
+            StopConfirmPulse();
             Confirm();
         }
     }

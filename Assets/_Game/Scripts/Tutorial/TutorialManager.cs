@@ -2,15 +2,18 @@ using System;
 using System.Collections.Generic;
 using CaskFramework.UI;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace Cast.Game
 {
     public sealed class TutorialManager
     {
+        private const float StepTransitionDelay = 0.25f;
+
         public IGameSession Session { get; }
         public BoardView Board { get; }
         public IBoardInput Input { get; }
-        public TutorialController View { get; }
+        public TutorialHandView Hand { get; }
         public IUIManager Ui { get; }
         public PopupTutorialHint ActivePopup { get; set; }
 
@@ -21,16 +24,43 @@ namespace Cast.Game
         private bool _awaitingCompletion;
 
         public TutorialManager(IGameSession session, BoardView board, IBoardInput input,
-                                TutorialController view, IUIManager ui)
+                                TutorialHandView hand, IUIManager ui)
         {
             Session = session;
             Board = board;
             Input = input;
-            View = view;
+            Hand = hand;
             Ui = ui;
         }
 
+        public void ShowTouchHand(int row, int col)
+        {
+            if (Hand == null || Board == null) return;
+            Hand.ShowTouch(Board.Layout.CellToWorld(row, col), Board.Layout.CellSize);
+        }
+
+        public void ShowDragHand(IReadOnlyList<(int Row, int Col)> cells)
+        {
+            if (Hand == null || Board == null || cells == null || cells.Count == 0) return;
+
+            var path = new List<Vector3>(cells.Count);
+            for (int i = 0; i < cells.Count; i++)
+                path.Add(Board.Layout.CellToWorld(cells[i].Row, cells[i].Col));
+
+            Hand.ShowDrag(path, Board.Layout.CellSize);
+        }
+
+        public void HideHand()
+        {
+            if (Hand == null) return;
+            Hand.Hide();
+        }
+
         public bool IsRunning => _running;
+
+        public event Action<int, TutorialStep> StepStarted;
+        public event Action<int> StepCompleted;
+        public event Action Finished;
 
         public void Run(IReadOnlyList<TutorialStep> steps, Action onFinished)
         {
@@ -61,6 +91,7 @@ namespace Cast.Game
             _steps = null;
 
             current?.End(this);
+            HideHand();
             CloseActivePopupAsync().Forget();
         }
 
@@ -83,7 +114,9 @@ namespace Cast.Game
 
             _awaitingCompletion = true;
             int startedIndex = _currentIndex;
-            _steps[_currentIndex].Begin(this, () => OnStepCompleted(startedIndex));
+            TutorialStep step = _steps[_currentIndex];
+            StepStarted?.Invoke(startedIndex, step);
+            step.Begin(this, () => OnStepCompleted(startedIndex));
         }
 
         private void OnStepCompleted(int index)
@@ -93,6 +126,17 @@ namespace Cast.Game
             if (index != _currentIndex) return;
 
             _awaitingCompletion = false;
+            StepCompleted?.Invoke(index);
+            AdvanceAfterDelayAsync().Forget();
+        }
+
+        private async UniTaskVoid AdvanceAfterDelayAsync()
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(StepTransitionDelay));
+
+            if (!_running) return;
+            if (_awaitingCompletion) return;
+
             Advance();
         }
 
@@ -101,6 +145,9 @@ namespace Cast.Game
             _running = false;
             _awaitingCompletion = false;
             _steps = null;
+
+            HideHand();
+            Finished?.Invoke();
 
             Action onFinished = _onFinished;
             _onFinished = null;

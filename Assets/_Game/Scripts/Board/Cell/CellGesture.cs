@@ -1,0 +1,28 @@
+namespace Cast.Game
+{
+    
+    public enum PointerGesture : byte
+    {
+        Tap = 0,
+        DoubleTap = 1,
+        LongPress = 2,
+        DragStart = 3,
+        DragMove = 4,
+        DragEnd = 5,
+        PressDown = 6,
+    }
+
+    public readonly struct CellGesture
+    {
+        public readonly int Row;
+        public readonly int Col;
+        public readonly PointerGesture Gesture;
+
+        public CellGesture(int row, int col, PointerGesture gesture)
+        {
+            Row = row;
+            Col = col;
+            Gesture = gesture;
+        }
+    }
+}

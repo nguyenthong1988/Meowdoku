@@ -15,6 +15,7 @@ namespace Cast.Game
         int Hearts { get; }
         int HeartsMax { get; }
         int HintsRemaining { get; }
+        int Moves { get; }
         float ElapsedTime { get; }
 
         event Action<GamePhase> PhaseChanged;

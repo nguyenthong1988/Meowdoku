@@ -116,8 +116,9 @@ namespace Cast.Game
             return ads.IsRewardedAdsReady();
         }
 
-        public void ShowBanner()
+        public void ShowBanner(string placement = "gameplay")
         {
+            AdPlacementContext.Set(AnalyticsValues.ad_format_banner, placement);
             if (_context.TryGet(out IAdsService ads))
                 ads.ShowBanner();
         }
@@ -134,7 +135,9 @@ namespace Cast.Game
                 ads.LoadRewardedAds();
         }
 
-        public async UniTask<bool> ShowRewardedAsync(RewardMode mode = RewardMode.ForceShowRewardedAd)
+        public async UniTask<bool> ShowRewardedAsync(RewardMode mode = RewardMode.ForceShowRewardedAd,
+                                                    string placement = "", string action = "",
+                                                    float loadTimeoutSeconds = 10f)
         {
             if (!_context.TryGet(out IAdsService ads))
                 return false;
@@ -142,20 +145,28 @@ namespace Cast.Game
             if (mode == RewardMode.ShowRewardedVideo && !ads.IsRewardedAdsReady())
                 return false;
 
+            AdPlacementContext.Set(AnalyticsValues.ad_format_rewarded, placement, action);
+
             var tcs = new UniTaskCompletionSource<bool>();
             ads.ShowRewarded(mode, (success, _) =>
             {
                 if (success)
+                {
                     RecordAdClose();
+                    LevelAnalytics.RecordRewardedWatched();
+                }
+                LoadRewarded();
                 tcs.TrySetResult(success);
-            });
+            }, timeOut: loadTimeoutSeconds);
             return await tcs.Task;
         }
 
-        public async UniTask<bool> ShowInterstitialAsync()
+        public async UniTask<bool> ShowInterstitialAsync(string placement = "")
         {
             if (!_context.TryGet(out IAdsService ads) || !ads.IsInterstitialReady())
                 return false;
+
+            AdPlacementContext.Set(AnalyticsValues.ad_format_interstitial, placement);
 
             var tcs = new UniTaskCompletionSource<bool>();
             ads.ShowInterstitial(

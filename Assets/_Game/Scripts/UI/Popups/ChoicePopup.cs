@@ -16,19 +16,25 @@ namespace Cast.Game
             _chosen = false;
         }
 
+        public void AllowNewChoice()
+        {
+            _chosen = false;
+        }
+
         protected void Choose(TChoice choice)
         {
             if (_chosen) return;
             _chosen = true;
-            Action<TChoice> callback = _callback;
-            _callback = null;
-            callback?.Invoke(choice);
+            _callback?.Invoke(choice);
         }
 
         protected virtual void OnDestroy()
         {
             if (_chosen) return;
-            Choose(_fallback);
+            _chosen = true;
+            Action<TChoice> callback = _callback;
+            _callback = null;
+            callback?.Invoke(_fallback);
         }
     }
 }
